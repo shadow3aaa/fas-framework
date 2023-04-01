@@ -124,3 +124,32 @@ pub fn get_top_app() -> String {
     }
     topapp
 }
+
+pub fn ask_is_game() -> bool {
+    let current_surface_view = exec_cmd("dumpsys", &["SurfaceFlinger", "--list"])
+        .expect("Err : Failed to execute dumpsys SurfaceView");
+    for line in current_surface_view.lines() {
+        if line.contains("SurfaceView[") && line.contains("BLAST") {
+            return true;
+        } else if line.contains("SurfaceView -") {
+            return true;
+        }
+    }
+    return false;
+}
+
+pub fn get_refresh_rate() -> u64 {
+    let i = match exec_cmd("dumpsys", &["SurfaceFlinger"])
+        .expect("Err : Failed to execute dumpsys SurfaceView")
+        .lines()
+        .find(| l | l.contains("refresh-rate")) {
+            Some(o) => o,
+            None => {
+                return 0;
+            }
+        };
+    cut(&cut(i, ".", 0), ":", 1)
+        .trim()
+        .parse::<u64>()
+        .unwrap()
+}

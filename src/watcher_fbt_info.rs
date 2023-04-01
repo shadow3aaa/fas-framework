@@ -25,7 +25,7 @@ impl WatcherNeed for FBTWatcher {
         use fas_framework::misc;
         misc::test_file("/sys/kernel/fpsgo/fbt/fbt_info")
     }
-    fn get_ft(&self) -> Receiver<JankType> {
+    fn get_ft(&self) -> Receiver<usize> {
         use std::{sync::mpsc::Receiver, time::Duration, thread};
         use spin_sleep::SpinSleeper;
         
@@ -44,5 +44,31 @@ impl WatcherNeed for FBTWatcher {
                 tx.send(frametime).unwrap();
             }
         });
+        return rx;
+    }
+    fn get_fps(&self) -> fn(std::time::Duration) -> u64 {
+        fn fps_method(avg_time: std::time::Duration) -> u64 {
+            use crate::misc::{exec_cmd, cut};
+            use std::time::Instant;
+            use spin_sleep::SpinSleeper;
+            let sleeper = SpinSleeper::default();
+            let target_fps = super::jank::Frametime::read_ft().0;
+    
+            let data_a = exec_cmd("service", &["call", "SurfaceFlinger", "1013"])
+                .unwrap();
+            let now = Instant::now();
+            let data_a = cut(&cut(&data_a, "(", 1), "\'", 0);
+            let data_a = u64::from_str_radix(&data_a, 16).unwrap();
+    
+            sleeper.sleep(avg_time);
+    
+            let data_b = exec_cmd("service", &["call", "SurfaceFlinger", "1013"])
+                .unwrap();
+            let data_b = cut(&cut(&data_b, "(", 1), "\'", 0);
+            let data_b = u64::from_str_radix(&data_b, 16).unwrap();
+    
+            let avg_fps = (data_b - data_a) * 1000 / (now.elapsed().as_millis() as u64);
+        }
+        fps_method
     }
 }
