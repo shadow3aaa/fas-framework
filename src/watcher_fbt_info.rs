@@ -1,4 +1,5 @@
-use fas_framework::{JankType, WatcherNeed};
+use fas_framework::WatcherNeed;
+use crossbeam_channel::{Receiver, bounded};
 
 struct FBTWatcher;
 
@@ -26,16 +27,16 @@ impl WatcherNeed for FBTWatcher {
         misc::test_file("/sys/kernel/fpsgo/fbt/fbt_info")
     }
     fn get_ft(&self) -> Receiver<usize> {
-        use std::{sync::mpsc::Receiver, time::Duration, thread};
+        use std::{time::Duration, thread};
         use spin_sleep::SpinSleeper;
         
         let sleeper = SpinSleeper::default();
-        let (tx, rx) = mpsc::channel();
+        let (tx, rx) = bounded(147);
         
         thread::spawn(move || {
             loop {
                 let cur_a = FBTWatcher::read_ft();
-                let (mut target_fps, mut cur_b) = FBTWatcher::read_ft();
+                let mut cur_b = FBTWatcher::read_ft();
                 while cur_b == cur_a {
                     cur_b = FBTWatcher::read_ft();
                     sleeper.sleep(Duration::from_millis(3));
@@ -48,11 +49,10 @@ impl WatcherNeed for FBTWatcher {
     }
     fn get_fps(&self) -> fn(std::time::Duration) -> u64 {
         fn fps_method(avg_time: std::time::Duration) -> u64 {
-            use crate::misc::{exec_cmd, cut};
+            use fas_framework::misc::{exec_cmd, cut};
             use std::time::Instant;
             use spin_sleep::SpinSleeper;
             let sleeper = SpinSleeper::default();
-            let target_fps = super::jank::Frametime::read_ft().0;
     
             let data_a = exec_cmd("service", &["call", "SurfaceFlinger", "1013"])
                 .unwrap();
@@ -66,8 +66,7 @@ impl WatcherNeed for FBTWatcher {
                 .unwrap();
             let data_b = cut(&cut(&data_b, "(", 1), "\'", 0);
             let data_b = u64::from_str_radix(&data_b, 16).unwrap();
-    
-            let avg_fps = (data_b - data_a) * 1000 / (now.elapsed().as_millis() as u64);
+            (data_b - data_a) * 1000 / (now.elapsed().as_millis() as u64)
         }
         fps_method
     }

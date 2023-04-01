@@ -143,13 +143,26 @@ pub fn get_refresh_rate() -> u64 {
         .expect("Err : Failed to execute dumpsys SurfaceView")
         .lines()
         .find(| l | l.contains("refresh-rate")) {
-            Some(o) => o,
+            Some(o) => o.to_string(),
             None => {
                 return 0;
             }
         };
-    cut(&cut(i, ".", 0), ":", 1)
+    let c = cut(&i, ".", 0);
+    cut(&c, ":", 1)
         .trim()
         .parse::<u64>()
         .unwrap()
+}
+
+pub fn close_to<T: ToString>(n: T, m: T) -> bool {
+    use std::cmp::Ordering;
+    match n.to_string().len().cmp(&m.to_string().len()) {
+        Ordering::Equal => n
+            .to_string()
+            .chars()
+            .take(2)
+            .eq(m.to_string().chars().take(2)),
+        _ => false,
+    }
 }

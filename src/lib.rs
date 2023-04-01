@@ -1,12 +1,8 @@
 pub mod frame;
 pub mod misc;
 
-use std::{sync::mpsc::Receiver, time::Duration};
-
-pub enum JankType {
-    Janked,
-    UnJanked,
-}
+use std::time::Duration;
+use crossbeam_channel::Receiver;
 
 pub enum Mode {
     DailyMode(u64),
