@@ -65,6 +65,10 @@ pub fn write_file(content: &str, path: &str) {
     }
 }
 
+pub fn test_file(x: &str) -> bool {
+    std::path::Path::new(x).exists()
+}
+
 use std::time::Duration;
 pub fn timer_exec<F, R>(t: Duration, f: F) -> Option<Vec<R>>
 where

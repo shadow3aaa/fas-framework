@@ -1,6 +1,8 @@
 use std::{sync::mpsc::Receiver, time::Duration};
 use crate::{JankType, WatcherNeed};
 
+pub fn get_target_fps() -> 
+
 pub struct Watcher {
     ft_rx: Receiver<JankType>,
     fps_fn: fn(Duration) -> u64,
@@ -23,15 +25,15 @@ impl Watcher {
         eprint!("似乎该程序不支持你的设备");
         std::process::exit(-1);
     }
-    pub fn start() {
+    pub fn start(&self) {
         loop {
             
         }
     }
-    fn get_ft_jank() -> Result<bool, &'static str> {
+    fn get_ft_jank(&self) -> Result<bool, &'static str> {
     
     }
-    fn get_fps_jank() -> bool {
+    fn get_fps_jank(&self) -> bool {
     
     }
 }
