@@ -112,7 +112,7 @@ impl Watcher {
         fps < self.get_target_fps() - 3
     }
     /* 添加控制器类型 */
-    pub fn add(&self) {
+    pub fn add<T>(&self, : T) {
     
     }
 }
