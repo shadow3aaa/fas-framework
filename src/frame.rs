@@ -1,25 +1,25 @@
-use std::{sync::mpsc::Receiver, time::Duration};
+use std::{sync::{mpsc::Receiver, Mutex}, time::Duration};
 use crate::{JankType, WatcherNeed, Mode};
-
-pub fn get_target() -> Mode {
-    use crate::misc;
-    
-    match misc::ask_is_game() {
-        true => {
-            return  Mode::GameMode;
-        },
-        false => {
-            return Mode::DailyMode(misc::get_refresh_rate());
-        }
-    }
-}
 
 pub struct Watcher {
     ft_rx: Receiver<usize>,
     fps_fn: fn(Duration) -> u64,
+    target_fps: Mutex<u64>
 }
 
 impl Watcher {
+    pub fn get_current() -> Mode {
+        use crate::misc;
+        
+        match misc::ask_is_game() {
+            true => {
+                return  Mode::GameMode;
+            },
+            false => {
+                return Mode::DailyMode(misc::get_refresh_rate());
+            }
+        }
+    }
     // 传入具体实现的监视器列表，匹配第一个支持的
     pub fn new<T>(w: &[T]) -> Watcher where
             T: WatcherNeed {
@@ -27,10 +27,11 @@ impl Watcher {
         for i in w {
             if i.support() {
                 let ft_rx = i.get_ft();
-                let fps_fn = i.get_fps();
+                let mut fps_fn = i.get_fps();
                 return Watcher {
                     ft_rx,
-                    fps_fn
+                    fps_fn,
+                    target_fps : Mutex::new(120)
                 }
             }
         }
@@ -38,7 +39,14 @@ impl Watcher {
         std::process::exit(-1);
     }
     // fas运行逻辑
-    pub fn start(&self) {
+    pub fn start(&mut self) {
+        use std::thread;
+        thread::spawn(|| {
+            loop {
+            *self.target_fps.lock()
+                .unwrap() = (self.fps_fn)(Duration::from_secs(1));
+            }
+        });
         loop {
             
         }
@@ -61,9 +69,9 @@ impl Watcher {
         if ft_vec.len() < count.try_into().unwrap() {
             return Err("data too less");
         }
-        ft_vec.truncate(fc.try_into().unwrap());
-        let result: u32 = re.iter()
-            .fliter(|&n| n == IfJank::Janked)
+        ft_vec.truncate(count.try_into().unwrap());
+        let jank_count = ft_vec.iter()
+            .filter(| v | v > a)
             .count();
         Ok(result > ign)
     }
