@@ -8,6 +8,11 @@ pub enum JankType {
     UnJanked,
 }
 
+pub enum Mode {
+    DailyMode(u64),
+    GameMode(u64)
+}
+
 /* 监视器类型必须实现该trait */
 pub trait WatcherNeed {
     // 检测是否支持该监视器

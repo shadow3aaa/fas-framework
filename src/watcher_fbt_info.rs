@@ -1,6 +1,6 @@
 use fas_framework::{JankType, WatcherNeed};
 
-struct fbt_watcher;
+struct FBTWatcher;
 
 impl FBTWatcher {
     fn read_ft() -> usize {
@@ -21,11 +21,11 @@ impl FBTWatcher {
 }
 
 impl WatcherNeed for FBTWatcher {
-    pub fn support(&self) -> bool {
+    fn support(&self) -> bool {
         use fas_framework::misc;
         misc::test_file("/sys/kernel/fpsgo/fbt/fbt_info")
     }
-    pub fn get_ft(&self) -> Receiver<JankType> {
+    fn get_ft(&self) -> Receiver<JankType> {
         use std::{sync::mpsc::Receiver, time::Duration, thread};
         use spin_sleep::SpinSleeper;
         

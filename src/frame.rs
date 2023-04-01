@@ -1,7 +1,44 @@
 use std::{sync::mpsc::Receiver, time::Duration};
-use crate::{JankType, WatcherNeed};
+use crate::{JankType, WatcherNeed, Mode};
 
-pub fn get_target_fps() -> 
+pub fn get_target() -> Mode {
+    use crate::misc;
+    fn ask_is_game() -> bool {
+        let current_surface_view = misc::exec_cmd("dumpsys", &["SurfaceFlinger", "--list"])
+            .expect("Err : Failed to execute dumpsys SurfaceView");
+        for line in current_surface_view.lines() {
+            if line.contains("SurfaceView[") && line.contains("BLAST") {
+                return true;
+            } else if line.contains("SurfaceView -") {
+                return true;
+            }
+        }
+        return false;
+    }
+    fn get_refresh_rate() -> u64 {
+        let i = match misc::exec_cmd("dumpsys", &["SurfaceFlinger"])
+            .expect("Err : Failed to execute dumpsys SurfaceView")
+            .lines()
+            .find(| l | l.contains("refresh-rate")) {
+                Some(o) => o,
+                None => {
+                    return 0;
+                }
+            };
+        misc::cut(&misc::cut(i, ".", 0), ":", 1)
+            .trim()
+            .parse::<u64>()
+            .unwrap()
+    }
+    match ask_is_game() {
+        true => {
+            
+        },
+        false => {
+            return Mode::DailyMode(get_refresh_rate());
+        }
+    }
+}
 
 pub struct Watcher {
     ft_rx: Receiver<JankType>,
