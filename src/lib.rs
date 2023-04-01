@@ -22,3 +22,13 @@ pub trait WatcherNeed {
     // 给出时间，得出从现在开始到指定时间内的平均fps
     fn get_fps(&self) -> fn(Duration) -> u64;
 }
+
+/* 控制器类型必须实现该trait */
+pub trait ControllerNeed {
+    // 检测是否支持该控制器
+    fn support(&self) -> bool;
+    // 增加性能和功耗的方法
+    fn up(&self);
+    // 降低性能和功耗的方法
+    fn down();
+}
