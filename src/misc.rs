@@ -178,5 +178,5 @@ pub fn look_for_head<'a>(s: &'a str, h: usize) -> Option<&'a str>{
 }
 
 pub fn look_for_tail<'a>(s: &'a str, t: usize) -> Option<&'a str>{
-    s.lines().nth(t)
+    s.lines().rev().nth(t)
 }

@@ -95,18 +95,8 @@ impl Watcher<'_> {
                         self.inline_mode = Mode::DailyMode(a);
                         self.daily_reset();
                     }
-                    let target_fps = self.get_target_fps();
                     let fps_janked = self.get_fps_jank(Duration::from_millis(400));
-                    let ft_janked = match self.get_ft_jank(target_fps / 6) {
-                        Ok(o) => o,
-                        Err(e) => {
-                            eprintln!("{}", e);
-                            false
-                        }
-                    };
-                    if !fps_janked && !ft_janked {
-                        self.daily_freq(UpOrDown::Down);
-                    } else if !fps_janked && ft_janked {
+                    if !fps_janked {
                         self.daily_freq(UpOrDown::Down);
                     } else {
                         self.daily_freq(UpOrDown::Up);
@@ -118,6 +108,7 @@ impl Watcher<'_> {
                         self.game_reset();
                     }
                     let target_fps = self.get_target_fps();
+                    println!("target-fps: {}", target_fps);
                     let fps_janked = self.get_fps_jank(Duration::from_millis(400));
                     let ft_janked = match self.get_ft_jank(target_fps / 12) {
                         Ok(o) => o,
@@ -146,13 +137,13 @@ impl Watcher<'_> {
                 let target_fps_rx = receiver;
                 thread::spawn(move || {
                     let mut data: Vec<u64> = Vec::new();
-                    let mut timer = Instant::now() + Duration::from_secs(30);
+                    let mut timer = Instant::now();
                     loop {
                         let fps = (fps_fn)(Duration::from_secs(1));
                         data.push(fps);
-                        if Instant::now() >= timer {
-                            timer += Duration::from_secs(30);
-                            let max_fps = *data.iter().max().unwrap_or(&120) - 2;
+                        if timer.elapsed() >= Duration::from_secs(10) {
+                            timer = Instant::now();
+                            let max_fps = *data.iter().max().unwrap_or(&120);
                             data.clear();
                             sender.send(max_fps).unwrap();
                         }
@@ -211,6 +202,7 @@ impl Watcher<'_> {
         let fps = (self.fps_fn)(t);
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
+                println!("{}", fps);
                 return fps > f / 12 && fps < f - 3;
             }
             Mode::GameMode => {

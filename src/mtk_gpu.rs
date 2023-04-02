@@ -12,8 +12,9 @@ impl Gpu {
         use std::fs;
         let cur = fs::read_to_string("/proc/gpufreqv2/gpufreq_status")
             .unwrap();
-        let cur = misc::look_for_head(&cur, 1).unwrap();
-        let cur = misc::cut(cur, "index:", 1);
+        let cur = misc::look_for_head(&cur, 7).unwrap();
+        println!("{}", cur);
+        let cur = misc::cut(cur, ":", 1);
         misc::cut(&cur, ",", 0)
             .trim()
             .parse()
@@ -27,7 +28,8 @@ impl Gpu {
             Some(o) => o,
             None => ""
         };
-        let max = misc::cut(&max, "]", 0);
+        println!("{}", max);
+        let max = misc::cut(&max, "*", 0);
         let max = misc::cut(&max, "[", 1);
         let max = max.trim()
             .parse()
@@ -40,25 +42,26 @@ impl Gpu {
 }
 
 impl ControllerNeed for Gpu{
-    
     // 检测是否支持该控制器
     fn support(&self) -> bool {
         misc::test_file("/proc/gpufreqv2/fix_target_opp_index")
     }
-    // 游戏内增加性能和功耗的方法
-    fn g_up(&self) {
-        if Gpu::get_cur() < self.max {
-            Gpu::write(Gpu::get_cur() + 1);
+    fn g_down(&self) {
+        if Gpu::get_cur() <= self.max - 2 {
+            Gpu::write(Gpu::get_cur() + 2);
+        } else {
+            Gpu::write(self.max);
         }
     }
-    // 游戏外降低性能和功耗的方法
-    fn g_down(&self) {
-        if Gpu::get_cur() > 0 {
-            Gpu::write(Gpu::get_cur() - 1);
+    fn g_up(&self) {
+        if Gpu::get_cur() >= 2 {
+            Gpu::write(Gpu::get_cur() - 2);
+        } else {
+            Gpu::write(0);
         }
     }
     // 日用增加性能和功耗的方法(如果没有就写个空函数)
-    fn d_up(&self) {
+    fn d_down(&self) {
         if Gpu::get_cur() + 10 <= self.max {
             Gpu::write(Gpu::get_cur() + 10);
         } else {
@@ -66,7 +69,7 @@ impl ControllerNeed for Gpu{
         }
     }
     // 日用降低性能和功耗的方法(同上)
-    fn d_down(&self) {
+    fn d_up(&self) {
         if Gpu::get_cur() >= 10 {
             Gpu::write(Gpu::get_cur() - 10);
         } else {
