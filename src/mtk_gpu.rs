@@ -2,7 +2,6 @@ use fas_framework::{ControllerNeed, misc};
 
 pub struct Gpu {
     max: u32,
-    min: u32
 }
 
 impl Gpu {
@@ -35,7 +34,6 @@ impl Gpu {
             .unwrap();
         misc::write_file("0", "/proc/gpufreqv2/fix_target_opp_index");
         Box::new(Gpu {
-            min : 0,
             max
         })
     }
@@ -69,7 +67,7 @@ impl ControllerNeed for Gpu{
     }
     // 日用降低性能和功耗的方法(同上)
     fn d_down(&self) {
-        if Gpu::get_cur() - 10 >= 0 {
+        if Gpu::get_cur() >= 10 {
             Gpu::write(Gpu::get_cur() - 10);
         } else {
             Gpu::write(0);
