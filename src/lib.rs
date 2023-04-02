@@ -34,4 +34,6 @@ pub trait ControllerNeed {
     fn d_down(&self);
     // 恢复缺省状态的方法
     fn reset(&self);
+    // 恢复默认状态的方法
+    fn recovery(&self);
 }

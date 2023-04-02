@@ -75,14 +75,20 @@ impl Watcher<'_> {
             }
         }
     }
+    fn reset(&mut self) {
+        for i in self.controllers {
+            i.reset();
+        }
+    }
     
     // fas运行逻辑
     pub fn start(&mut self) {
+        self.reset();
         loop {
             match Watcher::get_current() {
                 Mode::DailyMode(a) => {
                     if self.inline_mode != Mode::DailyMode(a) {
-                        
+                        self.reset();
                     }
                 },
                 Mode::GameMode => {
