@@ -26,5 +26,5 @@ pub trait ControllerNeed {
     // 增加性能和功耗的方法
     fn up(&self);
     // 降低性能和功耗的方法
-    fn down();
+    fn down(&self);
 }

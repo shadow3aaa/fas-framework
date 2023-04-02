@@ -1,8 +1,9 @@
 use std::time::Duration;
 use crossbeam_channel::{bounded, Receiver};
-use crate::{WatcherNeed, Mode};
+use crate::{WatcherNeed, Mode, ControllerNeed};
 
 pub struct Watcher {
+    controllers: Vec<Box<dyn ControllerNeed>>,
     ft_rx: Receiver<usize>,
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
@@ -32,8 +33,7 @@ impl Watcher {
         }
     }
     // 传入具体实现的监视器列表，匹配第一个支持的
-    pub fn new<T>(w: &[T]) -> Watcher where
-            T: WatcherNeed {
+    pub fn new(w: &[Box<dyn WatcherNeed>], c: &[Box<dyn ControllerNeed>]) -> Watcher {
         use std::{thread, time::Instant};
         for i in w {
             if i.support() {
@@ -110,9 +110,5 @@ impl Watcher {
     fn get_fps_jank(&mut self, t: Duration) -> bool {
         let fps = (self.fps_fn)(t);
         fps < self.get_target_fps() - 3
-    }
-    /* 添加控制器类型 */
-    pub fn add<T>(&self, : T) {
-    
     }
 }
