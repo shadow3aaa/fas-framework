@@ -2,15 +2,15 @@ use std::time::Duration;
 use crossbeam_channel::{bounded, Receiver};
 use crate::{WatcherNeed, Mode, ControllerNeed};
 
-pub struct Watcher {
-    controllers: Vec<Box<dyn ControllerNeed>>,
+pub struct Watcher<'a> {
+    controllers: &'a[Box<dyn ControllerNeed>],
     ft_rx: Receiver<usize>,
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
     target_fps: u64
 }
 
-impl Watcher {
+impl Watcher<'_> {
     fn get_current() -> Mode {
         use crate::misc;
         
@@ -33,7 +33,7 @@ impl Watcher {
         }
     }
     // 传入具体实现的监视器列表，匹配第一个支持的
-    pub fn new(w: &[Box<dyn WatcherNeed>], c: &[Box<dyn ControllerNeed>]) -> Watcher {
+    pub fn new<'a>(w: &'a[Box<dyn WatcherNeed>], c: &'a[Box<dyn ControllerNeed>]) -> Watcher<'a> {
         use std::{thread, time::Instant};
         for i in w {
             if i.support() {
@@ -57,6 +57,7 @@ impl Watcher {
                 });
                 return Watcher {
                     ft_rx,
+                    controllers : c,
                     fps_fn,
                     target_fps_rx,
                     target_fps : 120
@@ -100,6 +101,7 @@ impl Watcher {
                     // 意思是，如果frametime超过目标frametime的1.1倍
                     return *v > (1000 * 1000 * 1000 / target_fps * 11 / 10) as usize;
                 }
+                // 实际发现部分获取frametime方法在刷新率和target_fps不匹配时需要更多工作
                 let r = 1000 * 1000 * 1000 / fresh_rate;
                 misc::close_to(*v, r as usize)
             })
