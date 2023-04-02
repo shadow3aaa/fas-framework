@@ -102,10 +102,12 @@ impl Watcher<'_> {
                         Ok(o) => o,
                         Err(e) => {
                             eprintln!("{}", e);
-                            continue;
+                            false
                         }
                     };
                     if !fps_janked && !ft_janked {
+                        self.daily_freq(UpOrDown::Down);
+                    } else if !fps_janked && ft_janked {
                         self.daily_freq(UpOrDown::Down);
                     } else {
                         self.daily_freq(UpOrDown::Up);
