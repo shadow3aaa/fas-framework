@@ -192,7 +192,7 @@ impl Watcher<'_> {
                 }
                 // 实际发现部分获取frametime方法在刷新率和target_fps不匹配时需要更多工作
                 let r = 1000 * 1000 * 1000 / fresh_rate;
-                misc::close_to(*v, r as usize)
+                !misc::close_to(*v, r as usize)
             })
             .count();
         Ok(jank_count > 3)
