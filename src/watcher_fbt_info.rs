@@ -1,7 +1,7 @@
 use fas_framework::WatcherNeed;
 use crossbeam_channel::{Receiver, bounded};
 
-struct FBTWatcher;
+pub struct FBTWatcher;
 
 impl FBTWatcher {
     fn read_ft() -> usize {
@@ -18,6 +18,9 @@ impl FBTWatcher {
             .unwrap()
             .parse::<usize>()
             .unwrap()
+    }
+    pub fn give() -> Box<FBTWatcher> {
+        Box::new(FBTWatcher{})
     }
 }
 

@@ -17,7 +17,6 @@ enum UpOrDown {
 }
 
 impl Watcher<'_> {
-    
     fn get_current() -> Mode {
         use crate::misc;
         match misc::ask_is_game() {
