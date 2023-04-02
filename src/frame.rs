@@ -13,7 +13,6 @@ pub struct Watcher<'a> {
 impl Watcher<'_> {
     fn get_current() -> Mode {
         use crate::misc;
-        
         match misc::ask_is_game() {
             true => {
                 return  Mode::GameMode;
@@ -24,12 +23,20 @@ impl Watcher<'_> {
         }
     }
     fn get_target_fps(&mut self) -> u64 {
-        match self.target_fps_rx.try_recv() {
-            Ok(o) => {
-                self.target_fps = o;
-                self.target_fps
+        match Watcher::get_current() {
+            Mode::DailyMode(f) => {
+                return f;
+            },
+            Mode::GameMode => {
+                match self.target_fps_rx.try_recv() {
+                Ok(o) => {
+                    self.target_fps = o;
+                    return self.target_fps;
+                }
+                Err(_) => {
+                    return self.target_fps;
+                }
             }
-            Err(_) => self.target_fps
         }
     }
     // 传入具体实现的监视器列表，匹配第一个支持的
@@ -70,7 +77,14 @@ impl Watcher<'_> {
     // fas运行逻辑
     pub fn start(&mut self) {
         loop {
-            
+            match Watcher::get_current() {
+                Mode::DailyMode(a) => {
+
+                },
+                Mode::GameMode => {
+
+                }
+            }
         }
     }
     /* 消耗frametime消息管道所有数据
