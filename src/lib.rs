@@ -4,6 +4,7 @@ pub mod misc;
 use std::time::Duration;
 use crossbeam_channel::Receiver;
 
+#[derive(PartialEq)]
 pub enum Mode {
     DailyMode(u64),
     GameMode
@@ -23,8 +24,14 @@ pub trait WatcherNeed {
 pub trait ControllerNeed {
     // 检测是否支持该控制器
     fn support(&self) -> bool;
-    // 增加性能和功耗的方法
-    fn up(&self);
-    // 降低性能和功耗的方法
-    fn down(&self);
+    // 游戏内增加性能和功耗的方法
+    fn g_up(&self);
+    // 游戏外降低性能和功耗的方法
+    fn g_down(&self);
+    // 日用增加性能和功耗的方法(如果没有就写个空函数)
+    fn d_up(&self);
+    // 日用降低性能和功耗的方法(同上)
+    fn d_down(&self);
+    // 恢复缺省状态的方法
+    fn reset(&self);
 }

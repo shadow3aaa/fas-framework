@@ -7,15 +7,22 @@ pub struct Watcher<'a> {
     ft_rx: Receiver<usize>,
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
-    target_fps: u64
+    target_fps: u64,
+    inline_mode: Mode
+}
+
+enum UpOrDown {
+        Up,
+        Down
 }
 
 impl Watcher<'_> {
+    
     fn get_current() -> Mode {
         use crate::misc;
         match misc::ask_is_game() {
             true => {
-                return  Mode::GameMode;
+                return Mode::GameMode;
             },
             false => {
                 return Mode::DailyMode(misc::get_refresh_rate());
@@ -29,12 +36,57 @@ impl Watcher<'_> {
             },
             Mode::GameMode => {
                 match self.target_fps_rx.try_recv() {
-                Ok(o) => {
-                    self.target_fps = o;
-                    return self.target_fps;
+                    Ok(o) => {
+                        self.target_fps = o;
+                        return self.target_fps;
+                    }
+                    Err(_) => {
+                        return self.target_fps;
+                    }
                 }
-                Err(_) => {
-                    return self.target_fps;
+            }
+        }
+    }
+    fn game_freq(&mut self, u: UpOrDown) {
+        match u {
+            UpOrDown::Up => {
+                for i in self.controllers {
+                    i.g_up();
+                }
+            },
+            UpOrDown::Down => {
+                for i in self.controllers {
+                    i.g_down();
+                }
+            }
+        }
+    }
+    fn daily_freq(&mut self, u: UpOrDown) {
+        match u {
+            UpOrDown::Up => {
+                for i in self.controllers {
+                    i.d_up();
+                }
+            },
+            UpOrDown::Down => {
+                for i in self.controllers {
+                    i.d_down();
+                }
+            }
+        }
+    }
+    
+    // fas运行逻辑
+    pub fn start(&mut self) {
+        loop {
+            match Watcher::get_current() {
+                Mode::DailyMode(a) => {
+                    if self.inline_mode != Mode::DailyMode(a) {
+                        
+                    }
+                },
+                Mode::GameMode => {
+
                 }
             }
         }
@@ -67,25 +119,13 @@ impl Watcher<'_> {
                     controllers : c,
                     fps_fn,
                     target_fps_rx,
-                    target_fps : 120
+                    target_fps : 120,
+                    inline_mode : Mode::DailyMode(120)
                 }
             }
         }
         eprint!("似乎该程序不支持你的设备");
         std::process::exit(-1);
-    }
-    // fas运行逻辑
-    pub fn start(&mut self) {
-        loop {
-            match Watcher::get_current() {
-                Mode::DailyMode(a) => {
-
-                },
-                Mode::GameMode => {
-
-                }
-            }
-        }
     }
     /* 消耗frametime消息管道所有数据
        返回指定最近帧内是否有超时 */
