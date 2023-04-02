@@ -98,7 +98,7 @@ impl Watcher<'_> {
                     }
                     let target_fps = self.get_target_fps();
                     let fps_janked = self.get_fps_jank(Duration::from_millis(400));
-                    let ft_janked = match self.get_ft_jank(target_fps / 12) {
+                    let ft_janked = match self.get_ft_jank(target_fps / 6) {
                         Ok(o) => o,
                         Err(e) => {
                             eprintln!("{}", e);
@@ -208,6 +208,13 @@ impl Watcher<'_> {
     /* 等待指定时间，并且返回指定时间通过fps看是否掉帧 */
     fn get_fps_jank(&mut self, t: Duration) -> bool {
         let fps = (self.fps_fn)(t);
-        fps < self.get_target_fps() - 3
+        match Watcher::get_current() {
+            Mode::DailyMode(f) => {
+                return fps > f / 12 && fps < f - 3;
+            }
+            Mode::GameMode => {
+                return fps < self.get_target_fps() - 3;
+            }
+        }
     }
 }
