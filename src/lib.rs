@@ -32,8 +32,6 @@ pub trait ControllerNeed {
     fn d_up(&self);
     // 日用降低性能和功耗的方法(同上)
     fn d_down(&self);
-    // 恢复缺省状态的方法
-    fn reset(&self);
-    // 恢复默认状态的方法
-    fn recovery(&self);
+    fn g_reset(&self);
+    fn d_reset(&self);
 }

@@ -75,24 +75,61 @@ impl Watcher<'_> {
             }
         }
     }
-    fn reset(&mut self) {
+    fn game_reset(&mut self) {
         for i in self.controllers {
-            i.reset();
+            i.g_reset();
+        }
+    }
+    fn daily_reset(&mut self) {
+        for i in self.controllers {
+            i.d_reset();
         }
     }
     
     // fas运行逻辑
     pub fn start(&mut self) {
-        self.reset();
+        self.daily_reset();
         loop {
             match Watcher::get_current() {
                 Mode::DailyMode(a) => {
                     if self.inline_mode != Mode::DailyMode(a) {
-                        self.reset();
+                        self.inline_mode = Mode::DailyMode(a);
+                        self.daily_reset();
+                    }
+                    let target_fps = self.get_target_fps();
+                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
+                    let ft_janked = match self.get_ft_jank(target_fps / 12) {
+                        Ok(o) => o,
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            continue;
+                        }
+                    };
+                    if !fps_janked && !ft_janked {
+                        self.daily_freq(UpOrDown::Down);
+                    } else {
+                        self.daily_freq(UpOrDown::Up);
                     }
                 },
                 Mode::GameMode => {
-
+                    if self.inline_mode != Mode::GameMode {
+                        self.inline_mode = Mode::GameMode;
+                        self.game_reset();
+                    }
+                    let target_fps = self.get_target_fps();
+                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
+                    let ft_janked = match self.get_ft_jank(target_fps / 12) {
+                        Ok(o) => o,
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            continue;
+                        }
+                    };
+                    if !fps_janked && !ft_janked {
+                        self.game_freq(UpOrDown::Down);
+                    } else {
+                        self.game_freq(UpOrDown::Up);
+                    }
                 }
             }
         }
@@ -135,7 +172,7 @@ impl Watcher<'_> {
     }
     /* 消耗frametime消息管道所有数据
        返回指定最近帧内是否有超时 */
-    fn get_ft_jank(&mut self, count: u32) -> Result<bool, &'static str> {
+    fn get_ft_jank(&mut self, count: u64) -> Result<bool, &'static str> {
         use crate::misc;
         let mut ft_vec: Vec<usize> = Vec::new();
         loop {
