@@ -1,5 +1,4 @@
-use fas_framework::frame::Watcher;
-use fas_framework::{misc, WatcherNeed, ControllerNeed};
+use fas_framework::{frame::Watcher, misc};
 
 /* 在这里导入模块 */
 mod watcher_fbt_info;
