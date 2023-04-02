@@ -19,12 +19,13 @@ impl FBTWatcher {
             .parse::<usize>()
             .unwrap()
     }
-    pub fn give() -> Box<FBTWatcher> {
+    pub fn give() -> Box<dyn WatcherNeed> {
         Box::new(FBTWatcher{})
     }
 }
 
 impl WatcherNeed for FBTWatcher {
+    
     fn support(&self) -> bool {
         use fas_framework::misc;
         misc::test_file("/sys/kernel/fpsgo/fbt/fbt_info")

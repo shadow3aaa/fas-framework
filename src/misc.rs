@@ -166,3 +166,17 @@ pub fn close_to<T: ToString>(n: T, m: T) -> bool {
         _ => false,
     }
 }
+
+pub fn look_for_line<'a>(s: &'a str, t: &str) -> &'a str {
+    s.lines()
+        .find(| l | l.contains(t))
+        .unwrap_or("")
+}
+
+pub fn look_for_head<'a>(s: &'a str, h: usize) -> Option<&'a str>{
+    s.lines().nth(h)
+}
+
+pub fn look_for_tail<'a>(s: &'a str, t: usize) -> Option<&'a str>{
+    s.lines().nth(t)
+}
