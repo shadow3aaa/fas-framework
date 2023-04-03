@@ -54,24 +54,24 @@ impl ControllerNeed for Gpu{
         }
     }
     fn g_up(&self) {
-        if Gpu::get_cur() >= 2 {
-            Gpu::write(Gpu::get_cur() - 2);
+        if Gpu::get_cur() >= 3 {
+            Gpu::write(Gpu::get_cur() - 3);
         } else {
             Gpu::write(0);
         }
     }
     // 日用增加性能和功耗的方法(如果没有就写个空函数)
     fn d_down(&self) {
-        if Gpu::get_cur() + 10 <= self.max {
-            Gpu::write(Gpu::get_cur() + 10);
+        if Gpu::get_cur() + 3 <= self.max {
+            Gpu::write(Gpu::get_cur() + 3);
         } else {
             Gpu::write(self.max);
         }
     }
     // 日用降低性能和功耗的方法(同上)
     fn d_up(&self) {
-        if Gpu::get_cur() >= 10 {
-            Gpu::write(Gpu::get_cur() - 10);
+        if Gpu::get_cur() >= 3 {
+            Gpu::write(Gpu::get_cur() - 3);
         } else {
             Gpu::write(0);
         }

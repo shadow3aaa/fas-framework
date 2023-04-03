@@ -96,14 +96,14 @@ impl Watcher<'_> {
                         self.daily_reset();
                     }
                     let target_fps = self.get_target_fps();
-                    let ft_janked = match self.get_ft_jank(target_fps / 12) {
+                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
+                    let ft_janked = match self.get_ft_jank(target_fps / 6) {
                         Ok(o) => o,
                         Err(e) => {
                             eprintln!("{}", e);
                             false
                         }
                     };
-                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
                     match fps_janked {
                         Jank::Janked => {
                             self.daily_freq(UpOrDown::Up);
@@ -126,6 +126,7 @@ impl Watcher<'_> {
                         self.game_reset();
                     }
                     let target_fps = self.get_target_fps();
+                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
                     let ft_janked = match self.get_ft_jank(target_fps / 12) {
                         Ok(o) => o,
                         Err(e) => {
@@ -133,7 +134,6 @@ impl Watcher<'_> {
                             continue;
                         }
                     };
-                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
                     match fps_janked {
                         Jank::Janked => {
                             self.game_freq(UpOrDown::Up);
