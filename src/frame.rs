@@ -106,7 +106,7 @@ impl Watcher<'_> {
                     }
                     let target_fps = self.get_target_fps();
                     let fps_janked = self.get_fps_jank(Duration::from_millis(300));
-                    let ft_janked = match self.get_ft_jank(target_fps / 2) {
+                    let ft_janked = match self.get_ft_jank(target_fps) {
                         Ok(o) => o,
                         Err(e) => {
                             eprintln!("{}", e);
@@ -242,7 +242,7 @@ impl Watcher<'_> {
             Mode::DailyMode(f) => {
                 if fps > f / 12 && fps < f - 3 {
                     return Jank::Janked;
-                } else if fps <= f / 12 {
+                } else if fps <= f / 4 {
                     return Jank::Static;
                 } else {
                     return Jank::UnJanked;
