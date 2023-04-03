@@ -13,7 +13,6 @@ impl Gpu {
         let cur = fs::read_to_string("/proc/gpufreqv2/gpufreq_status")
             .unwrap();
         let cur = misc::look_for_head(&cur, 7).unwrap();
-        println!("{}", cur);
         let cur = misc::cut(cur, ":", 1);
         misc::cut(&cur, ",", 0)
             .trim()
@@ -28,7 +27,6 @@ impl Gpu {
             Some(o) => o,
             None => ""
         };
-        println!("{}", max);
         let max = misc::cut(&max, "*", 0);
         let max = misc::cut(&max, "[", 1);
         let max = max.trim()
@@ -47,31 +45,31 @@ impl ControllerNeed for Gpu{
         misc::test_file("/proc/gpufreqv2/fix_target_opp_index")
     }
     fn g_down(&self) {
-        if Gpu::get_cur() <= self.max - 2 {
+        if Gpu::get_cur() + 2 <= self.max {
             Gpu::write(Gpu::get_cur() + 2);
         } else {
             Gpu::write(self.max);
         }
     }
     fn g_up(&self) {
-        if Gpu::get_cur() >= 3 {
-            Gpu::write(Gpu::get_cur() - 3);
+        if Gpu::get_cur() >= 2 {
+            Gpu::write(Gpu::get_cur() - 2);
         } else {
             Gpu::write(0);
         }
     }
     // 日用增加性能和功耗的方法(如果没有就写个空函数)
     fn d_down(&self) {
-        if Gpu::get_cur() + 3 <= self.max {
-            Gpu::write(Gpu::get_cur() + 3);
+        if Gpu::get_cur() + 5 <= self.max {
+            Gpu::write(Gpu::get_cur() + 5);
         } else {
             Gpu::write(self.max);
         }
     }
     // 日用降低性能和功耗的方法(同上)
     fn d_up(&self) {
-        if Gpu::get_cur() >= 3 {
-            Gpu::write(Gpu::get_cur() - 3);
+        if Gpu::get_cur() >= 5 {
+            Gpu::write(Gpu::get_cur() - 5);
         } else {
             Gpu::write(0);
         }

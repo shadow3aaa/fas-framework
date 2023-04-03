@@ -108,8 +108,7 @@ impl Watcher<'_> {
                     let fps_janked = self.get_fps_jank(Duration::from_millis(300));
                     let ft_janked = match self.get_ft_jank(target_fps) {
                         Ok(o) => o,
-                        Err(e) => {
-                            eprintln!("{}", e);
+                        Err(_) => {
                             false
                         }
                     };
@@ -142,8 +141,7 @@ impl Watcher<'_> {
                     let fps_janked = self.get_fps_jank(Duration::from_millis(400));
                     let ft_janked = match self.get_ft_jank(target_fps / 12) {
                         Ok(o) => o,
-                        Err(e) => {
-                            eprintln!("{}", e);
+                        Err(_) => {
                             continue;
                         }
                     };
@@ -209,16 +207,8 @@ impl Watcher<'_> {
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, &'static str> {
         use crate::misc;
         let mut ft_vec: Vec<usize> = Vec::new();
-        loop {
-            match self.ft_rx.try_recv() {
-                Ok(o) => {
-                    ft_vec.push(o);
-                },
-                _ => {
-                    break;
-                }
-            }
-        }
+        let iter = self.ft_rx.try_iter().peekable();
+        ft_vec.extend(iter.map(|x| x.clone()));
         if ft_vec.len() < count.try_into().unwrap() {
             return Err("data too less");
         }
@@ -238,11 +228,12 @@ impl Watcher<'_> {
     /* 等待指定时间，并且返回指定时间通过fps看是否掉帧 */
     fn get_fps_jank(&mut self, t: Duration) -> Jank {
         let fps = (self.fps_fn)(t);
+        let target_fps = self.get_target_fps();
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
-                if fps > f / 12 && fps < f - 3 {
+                if fps > f / 12 && fps < f - 10 {
                     return Jank::Janked;
-                } else if fps <= f / 4 {
+                } else if fps <= f / 4 || (fps > 30 && fps < 38 && target_fps != 30) || (fps > 60 && fps < 68 && target_fps != 60) || (fps > 120 && fps < 128 && target_fps != 120) {
                     return Jank::Static;
                 } else {
                     return Jank::UnJanked;

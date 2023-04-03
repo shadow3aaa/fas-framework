@@ -44,7 +44,7 @@ pub fn cut(str: &str, sym: &str, f: usize) -> String {
 
 pub fn write_file(content: &str, path: &str) {
     use std::{io::Write, os::unix::fs::PermissionsExt, fs::{OpenOptions, set_permissions}};
-    println!("path: {}, value: {}", &content, &path);
+    // println!("path: {}, value: {}", &content, &path);
     match set_permissions(path, PermissionsExt::from_mode(0o644)) {
         Ok(()) => {
             match OpenOptions::new()
@@ -128,6 +128,11 @@ pub fn get_top_app() -> String {
 pub fn ask_is_game() -> bool {
     let current_surface_view = exec_cmd("dumpsys", &["SurfaceFlinger", "--list"])
         .expect("Err : Failed to execute dumpsys SurfaceView");
+    // 忽略被误判的
+    let ignore = ["tv.danmaku.bili", "com.perol.pixez", "jp.pxv.android", "com.lemurbrowser.exts", "mark.via", "com.tencent.mm", "com.tencent.mobileqq", "com.miui.gallery"];
+    if ignore.contains(&&get_top_app()[..]) {
+        return false;
+    }
     for line in current_surface_view.lines() {
         if line.contains("SurfaceView[") && line.contains("BLAST") {
             return true;
