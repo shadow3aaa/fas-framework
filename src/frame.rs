@@ -186,13 +186,9 @@ impl Watcher<'_> {
         let target_fps = self.get_target_fps();
         let jank_count = ft_vec.iter()
             .filter(| &v | {
-                if target_fps >= fresh_rate {
-                    // 意思是，如果frametime超过目标frametime的1.1倍
-                    return *v > (1000 * 1000 * 1000 / target_fps * 11 / 10) as usize;
-                }
-                // 实际发现部分获取frametime方法在刷新率和target_fps不匹配时需要更多工作
-                let r = 1000 * 1000 * 1000 / fresh_rate;
-                !misc::close_to(*v, r as usize)
+                let sc_f = (1000 * 1000 * 1000 / fresh_rate) as usize;
+                let o = *v % sc_f;
+                o >= (1000 * 1000 * 1000 / target_fps * 11 / 10) as usize
             })
             .count();
         Ok(jank_count > 3)

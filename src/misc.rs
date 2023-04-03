@@ -155,18 +155,6 @@ pub fn get_refresh_rate() -> u64 {
         .unwrap()
 }
 
-pub fn close_to<T: ToString>(n: T, m: T) -> bool {
-    use std::cmp::Ordering;
-    match n.to_string().len().cmp(&m.to_string().len()) {
-        Ordering::Equal => n
-            .to_string()
-            .chars()
-            .take(2)
-            .eq(m.to_string().chars().take(2)),
-        _ => false,
-    }
-}
-
 pub fn look_for_line<'a>(s: &'a str, t: &str) -> &'a str {
     s.lines()
         .find(| l | l.contains(t))
