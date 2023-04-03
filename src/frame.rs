@@ -8,7 +8,8 @@ pub struct Watcher<'a> {
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
     target_fps: u64,
-    inline_mode: Mode
+    inline_mode: Mode,
+    janked: bool
 }
 
 enum UpOrDown {
@@ -54,6 +55,9 @@ impl Watcher<'_> {
                 }
             },
             UpOrDown::Down => {
+                if self.janked {
+                    return;
+                }
                 for i in self.controllers {
                     i.g_down();
                 }
@@ -68,6 +72,9 @@ impl Watcher<'_> {
                 }
             },
             UpOrDown::Down => {
+                if self.janked {
+                    return;
+                }
                 for i in self.controllers {
                     i.d_down();
                 }
@@ -75,11 +82,13 @@ impl Watcher<'_> {
         }
     }
     fn game_reset(&mut self) {
+        self.janked = false;
         for i in self.controllers {
             i.g_reset();
         }
     }
     fn daily_reset(&mut self) {
+        self.janked = false;
         for i in self.controllers {
             i.d_reset();
         }
@@ -96,8 +105,8 @@ impl Watcher<'_> {
                         self.daily_reset();
                     }
                     let target_fps = self.get_target_fps();
-                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
-                    let ft_janked = match self.get_ft_jank(target_fps / 6) {
+                    let fps_janked = self.get_fps_jank(Duration::from_millis(300));
+                    let ft_janked = match self.get_ft_jank(target_fps / 2) {
                         Ok(o) => o,
                         Err(e) => {
                             eprintln!("{}", e);
@@ -106,16 +115,20 @@ impl Watcher<'_> {
                     };
                     match fps_janked {
                         Jank::Janked => {
+                            self.janked = true;
                             self.daily_freq(UpOrDown::Up);
                         },
                         Jank::UnJanked => {
                             if ft_janked {
+                                self.janked = true;
                                 self.daily_freq(UpOrDown::Up);
                             } else {
+                                self.janked = false;
                                 self.daily_freq(UpOrDown::Down);
                             }
                         },
                         Jank::Static => {
+                            self.janked = false;
                             self.daily_freq(UpOrDown::Down);
                         }
                     }
@@ -136,12 +149,15 @@ impl Watcher<'_> {
                     };
                     match fps_janked {
                         Jank::Janked => {
+                            self.janked = true;
                             self.game_freq(UpOrDown::Up);
                         },
                         Jank::UnJanked => {
                             if ft_janked {
+                                self.janked = true;
                                 self.game_freq(UpOrDown::Up);
                             } else {
+                                self.janked = false;
                                 self.game_freq(UpOrDown::Down);
                             }
                         },
@@ -180,7 +196,8 @@ impl Watcher<'_> {
                     fps_fn,
                     target_fps_rx,
                     target_fps : 120,
-                    inline_mode : Mode::DailyMode(120)
+                    inline_mode : Mode::DailyMode(120),
+                    janked : false
                 }
             }
         }
