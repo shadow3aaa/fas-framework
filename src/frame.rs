@@ -1,6 +1,6 @@
 use std::time::Duration;
 use crossbeam_channel::{bounded, Receiver};
-use crate::{WatcherNeed, Mode, ControllerNeed};
+use crate::{WatcherNeed, Mode, ControllerNeed, Jank};
 
 pub struct Watcher<'a> {
     controllers: &'a[Box<dyn ControllerNeed>],
@@ -95,11 +95,29 @@ impl Watcher<'_> {
                         self.inline_mode = Mode::DailyMode(a);
                         self.daily_reset();
                     }
+                    let target_fps = self.get_target_fps();
+                    let ft_janked = match self.get_ft_jank(target_fps / 12) {
+                        Ok(o) => o,
+                        Err(e) => {
+                            eprintln!("{}", e);
+                            false
+                        }
+                    };
                     let fps_janked = self.get_fps_jank(Duration::from_millis(400));
-                    if !fps_janked {
-                        self.daily_freq(UpOrDown::Down);
-                    } else {
-                        self.daily_freq(UpOrDown::Up);
+                    match fps_janked {
+                        Jank::Janked => {
+                            self.daily_freq(UpOrDown::Up);
+                        },
+                        Jank::UnJanked => {
+                            if ft_janked {
+                                self.daily_freq(UpOrDown::Up);
+                            } else {
+                                self.daily_freq(UpOrDown::Down);
+                            }
+                        },
+                        Jank::Static => {
+                            self.daily_freq(UpOrDown::Down);
+                        }
                     }
                 },
                 Mode::GameMode => {
@@ -108,8 +126,6 @@ impl Watcher<'_> {
                         self.game_reset();
                     }
                     let target_fps = self.get_target_fps();
-                    println!("target-fps: {}", target_fps);
-                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
                     let ft_janked = match self.get_ft_jank(target_fps / 12) {
                         Ok(o) => o,
                         Err(e) => {
@@ -117,10 +133,19 @@ impl Watcher<'_> {
                             continue;
                         }
                     };
-                    if !fps_janked && !ft_janked {
-                        self.game_freq(UpOrDown::Down);
-                    } else {
-                        self.game_freq(UpOrDown::Up);
+                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
+                    match fps_janked {
+                        Jank::Janked => {
+                            self.game_freq(UpOrDown::Up);
+                        },
+                        Jank::UnJanked => {
+                            if ft_janked {
+                                self.game_freq(UpOrDown::Up);
+                            } else {
+                                self.game_freq(UpOrDown::Down);
+                            }
+                        },
+                        _ => {}
                     }
                 }
             }
@@ -194,15 +219,24 @@ impl Watcher<'_> {
         Ok(jank_count > 3)
     }
     /* 等待指定时间，并且返回指定时间通过fps看是否掉帧 */
-    fn get_fps_jank(&mut self, t: Duration) -> bool {
+    fn get_fps_jank(&mut self, t: Duration) -> Jank {
         let fps = (self.fps_fn)(t);
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
-                println!("{}", fps);
-                return fps > f / 12 && fps < f - 3;
+                if fps > f / 12 && fps < f - 3 {
+                    return Jank::Janked;
+                } else if fps <= f / 12 {
+                    return Jank::Static;
+                } else {
+                    return Jank::UnJanked;
+                }
             }
             Mode::GameMode => {
-                return fps < self.get_target_fps() - 3;
+                if fps < self.get_target_fps() - 3 {
+                    return Jank::Janked;
+                } else {
+                    return Jank::UnJanked;
+                }
             }
         }
     }

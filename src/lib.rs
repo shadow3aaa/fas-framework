@@ -10,6 +10,12 @@ pub enum Mode {
     GameMode
 }
 
+pub enum Jank {
+    Janked,
+    UnJanked,
+    Static
+}
+
 /* 监视器类型必须实现该trait */
 pub trait WatcherNeed {
     // 检测是否支持该监视器
