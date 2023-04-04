@@ -43,7 +43,7 @@ impl WatcherNeed for FBTWatcher {
                 let mut cur_b = FBTWatcher::read_ft();
                 while cur_b == cur_a {
                     cur_b = FBTWatcher::read_ft();
-                    sleeper.sleep(Duration::from_millis(3));
+                    sleeper.sleep(Duration::from_millis(6));
                 }
                 let frametime = cur_b - cur_a;
                 tx.send(frametime).unwrap();
