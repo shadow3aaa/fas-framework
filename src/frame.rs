@@ -240,7 +240,7 @@ impl Watcher<'_> {
                 }
             }
             Mode::GameMode => {
-                if fps < self.get_target_fps() - 3 {
+                if fps < self.get_target_fps() - 2 {
                     return Jank::Janked;
                 } else {
                     return Jank::UnJanked;

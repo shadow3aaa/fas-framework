@@ -10,13 +10,13 @@ fn main() {
     misc::bound_to_little();
     let miui = !misc::exec_cmd("getprop", &["ro.miui.ui.version.code"]).unwrap().is_empty();
     let watcher_list = [FBTWatcher::give()];
-    let controller_list;
+    let mut controller_list = Vec::new();
     if !miui {
         // 如果不是miui
-        controller_list = [mtk_gpu::Gpu::give()];
+        controller_list.push(mtk_gpu::Gpu::give());
     } else {
         // 如果是miui
-        controller_list = [mtk_gpu_miui::Gpu::give()];
+        controller_list.push(mtk_gpu_miui::Gpu::give());
     }
     let mut w = Watcher::new(&watcher_list, &controller_list);
     w.start();
