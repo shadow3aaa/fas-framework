@@ -18,6 +18,5 @@ fn main() {
         // 如果是miui
         controller_list.push(mtk_gpu_miui::Gpu::give());
     }
-    let mut w = Watcher::new(&watcher_list, &controller_list);
-    w.start();
+    Watcher::start(&watcher_list, &controller_list);
 }

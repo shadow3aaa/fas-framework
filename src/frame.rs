@@ -3,7 +3,7 @@ use crossbeam_channel::{bounded, Receiver};
 use crate::{WatcherNeed, Mode, ControllerNeed, Jank};
 
 pub struct Watcher<'a> {
-    controllers: &'a[Box<dyn ControllerNeed>],
+    controller: &'a Box<dyn ControllerNeed>,
     ft_rx: Receiver<usize>,
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
@@ -50,152 +50,153 @@ impl Watcher<'_> {
     fn game_freq(&mut self, u: UpOrDown) {
         match u {
             UpOrDown::Up => {
-                for i in self.controllers {
-                    i.g_up();
-                }
+                self.controller.g_up();
             },
             UpOrDown::Down => {
                 if self.janked {
                     return;
                 }
-                for i in self.controllers {
-                    i.g_down();
-                }
+                self.controller.g_down();
             }
         }
     }
     fn daily_freq(&mut self, u: UpOrDown) {
         match u {
             UpOrDown::Up => {
-                for i in self.controllers {
-                    i.d_up();
-                }
+                self.controller.d_up();
             },
             UpOrDown::Down => {
                 if self.janked {
                     return;
                 }
-                for i in self.controllers {
-                    i.d_down();
-                }
+                self.controller.d_down();
             }
         }
     }
     fn game_reset(&mut self) {
         self.janked = false;
-        for i in self.controllers {
-            i.g_reset();
-        }
+        self.controller.g_reset();
     }
     fn daily_reset(&mut self) {
         self.janked = false;
-        for i in self.controllers {
-            i.d_reset();
-        }
+        self.controller.d_reset();
     }
     
     // fas运行逻辑
-    pub fn start(&mut self) {
+    fn run(&mut self) {
         self.daily_reset();
-        loop {
-            match Watcher::get_current() {
-                Mode::DailyMode(a) => {
-                    if self.inline_mode != Mode::DailyMode(a) {
-                        self.inline_mode = Mode::DailyMode(a);
-                        self.daily_reset();
+        match Watcher::get_current() {
+            Mode::DailyMode(a) => {
+                if self.inline_mode != Mode::DailyMode(a) {
+                    self.inline_mode = Mode::DailyMode(a);
+                    self.daily_reset();
+                }
+                let target_fps = self.get_target_fps();
+                let fps_janked = self.get_fps_jank(Duration::from_millis(300));
+                let ft_janked = match self.get_ft_jank(target_fps) {
+                    Ok(o) => o,
+                    Err(_) => {
+                        false
                     }
-                    let target_fps = self.get_target_fps();
-                    let fps_janked = self.get_fps_jank(Duration::from_millis(300));
-                    let ft_janked = match self.get_ft_jank(target_fps) {
-                        Ok(o) => o,
-                        Err(_) => {
-                            false
-                        }
-                    };
-                    match fps_janked {
-                        Jank::Janked => {
+                };
+                match fps_janked {
+                    Jank::Janked => {
+                        self.janked = true;
+                        self.daily_freq(UpOrDown::Up);
+                    },
+                    Jank::UnJanked => {
+                        if ft_janked {
                             self.janked = true;
                             self.daily_freq(UpOrDown::Up);
-                        },
-                        Jank::UnJanked => {
-                            if ft_janked {
-                                self.janked = true;
-                                self.daily_freq(UpOrDown::Up);
-                            } else {
-                                self.janked = false;
-                                self.daily_freq(UpOrDown::Down);
-                            }
-                        },
-                        Jank::Static => {
+                        } else {
                             self.janked = false;
                             self.daily_freq(UpOrDown::Down);
                         }
+                    },
+                    Jank::Static => {
+                        self.janked = false;
+                        self.daily_freq(UpOrDown::Down);
                     }
-                },
-                Mode::GameMode => {
-                    if self.inline_mode != Mode::GameMode {
-                        self.inline_mode = Mode::GameMode;
-                        self.game_reset();
+                }
+            },
+            Mode::GameMode => {
+                if self.inline_mode != Mode::GameMode {
+                    self.inline_mode = Mode::GameMode;
+                    self.game_reset();
+                }
+                let target_fps = self.get_target_fps();
+                let fps_janked = self.get_fps_jank(Duration::from_millis(400));
+                let ft_janked = match self.get_ft_jank(target_fps / 12) {
+                    Ok(o) => o,
+                    Err(_) => {
+                        return;
                     }
-                    let target_fps = self.get_target_fps();
-                    let fps_janked = self.get_fps_jank(Duration::from_millis(400));
-                    let ft_janked = match self.get_ft_jank(target_fps / 12) {
-                        Ok(o) => o,
-                        Err(_) => {
-                            continue;
-                        }
-                    };
-                    match fps_janked {
-                        Jank::Janked => {
+                };
+                match fps_janked {
+                    Jank::Janked => {
+                        self.janked = true;
+                        self.game_freq(UpOrDown::Up);
+                    },
+                    Jank::UnJanked => {
+                        if ft_janked {
                             self.janked = true;
                             self.game_freq(UpOrDown::Up);
-                        },
-                        Jank::UnJanked => {
-                            if ft_janked {
-                                self.janked = true;
-                                self.game_freq(UpOrDown::Up);
-                            } else {
-                                self.janked = false;
-                                self.game_freq(UpOrDown::Down);
-                            }
-                        },
-                        _ => {}
-                    }
+                        } else {
+                            self.janked = false;
+                            self.game_freq(UpOrDown::Down);
+                        }
+                    },
+                    _ => {}
                 }
             }
         }
     }
     // 传入具体实现的监视器列表，匹配第一个支持的
-    pub fn new<'a>(w: &'a[Box<dyn WatcherNeed>], c: &'a[Box<dyn ControllerNeed>]) -> Watcher<'a> {
+    pub fn start<'a>(w: &'a[Box<dyn WatcherNeed>], c: &'a[Box<dyn ControllerNeed>]) {
         use std::{thread, time::Instant};
         for i in w {
-            if i.support() {
-                let ft_rx = i.get_ft();
-                let fps_fn = i.get_fps();
-                let (sender, receiver) = bounded(1);
-                let target_fps_rx = receiver;
-                thread::spawn(move || {
-                    let mut data: Vec<u64> = Vec::new();
-                    let mut timer = Instant::now();
-                    loop {
-                        let fps = (fps_fn)(Duration::from_secs(1));
-                        data.push(fps);
-                        if timer.elapsed() >= Duration::from_secs(10) {
-                            timer = Instant::now();
-                            let max_fps = *data.iter().max().unwrap_or(&120);
-                            data.clear();
-                            sender.send(max_fps).unwrap();
-                        }
+            if !i.support() {
+                continue;
+            }
+            // 创建监视器
+            let ft_rx = i.get_ft();
+            let fps_fn = i.get_fps();
+            let (sender, target_fps_rx) = bounded(1);
+            thread::spawn(move || {
+                let mut data: Vec<u64> = Vec::new();
+                let mut timer = Instant::now();
+                loop {
+                    let fps = (fps_fn)(Duration::from_secs(1));
+                    data.push(fps);
+                    if timer.elapsed() >= Duration::from_secs(10) {
+                        timer = Instant::now();
+                        let max_fps = *data.iter().max().unwrap_or(&120);
+                        data.clear();
+                        sender.send(max_fps).unwrap();
                     }
-                });
-                return Watcher {
-                    ft_rx,
-                    controllers : c,
-                    fps_fn,
-                    target_fps_rx,
+                }
+            });
+            // 创建多个实例
+            let mut w_vec: Vec<Watcher> = Vec::new();
+            for ci in c {
+                if !ci.support() {
+                    continue;
+                }
+                let n = Watcher {
+                    ft_rx : ft_rx.clone(),
+                    controller : ci,
+                    fps_fn ,
+                    target_fps_rx : target_fps_rx.clone(),
                     target_fps : 120,
                     inline_mode : Mode::DailyMode(120),
                     janked : false
+                };
+                w_vec.push(n);
+            }
+            // 控制多个实例
+            loop {
+                for w in &mut w_vec {
+                    w.run();
                 }
             }
         }
