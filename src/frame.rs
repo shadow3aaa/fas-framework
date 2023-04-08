@@ -13,8 +13,8 @@ pub struct Watcher<'a> {
 }
 
 enum UpOrDown {
-        Up,
-        Down
+    Up,
+    Down
 }
 
 impl Watcher<'_> {

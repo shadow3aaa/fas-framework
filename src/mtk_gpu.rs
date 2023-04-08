@@ -63,16 +63,24 @@ impl ControllerNeed for Gpu{
     }
     // 日用增加性能和功耗的方法(如果没有就写个空函数)
     fn d_down(&self) {
-        if Gpu::get_cur() + 5 <= self.max {
-            Gpu::write(Gpu::get_cur() + 5);
+        if Gpu::get_cur() < self.max / 4 {
+            Gpu::write(self.max / 4);
+        } else if Gpu::get_cur() < self.max / 2 {
+            Gpu::write(self.max / 2);
+        } else if Gpu::get_cur() < self.max * 3 / 4 {
+            Gpu::write(self.max * 3 / 4);
         } else {
             Gpu::write(self.max);
         }
     }
     // 日用降低性能和功耗的方法(同上)
     fn d_up(&self) {
-        if Gpu::get_cur() >= 5 {
-            Gpu::write(Gpu::get_cur() - 5);
+        if Gpu::get_cur() > self.max * 3 / 4 {
+            Gpu::write(self.max * 3 / 4);
+        } else if Gpu::get_cur() > self.max / 2 {
+            Gpu::write(self.max / 2);
+        } else if Gpu::get_cur() > self.max / 4 {
+            Gpu::write(self.max / 4);
         } else {
             Gpu::write(0);
         }
