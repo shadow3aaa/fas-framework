@@ -83,7 +83,7 @@ impl Watcher<'_> {
     }
     
     // fas运行逻辑
-    fn run(&mut self) {
+    fn run(&mut self, t: Duration) {
         self.daily_reset();
         match Watcher::get_current() {
             Mode::DailyMode(a) => {
@@ -128,11 +128,11 @@ impl Watcher<'_> {
                     self.game_reset();
                 }
                 let target_fps = self.get_target_fps();
-                let fps_janked = self.get_fps_jank(Duration::from_millis(400));
+                let fps_janked = self.get_fps_jank(t);
                 let ft_janked = match self.get_ft_jank(target_fps / 12) {
                     Ok(o) => o,
-                    Err(_) => {
-                        return;
+                    Err(o) => {
+                        o
                     }
                 };
                 match fps_janked {
@@ -196,11 +196,24 @@ impl Watcher<'_> {
                 };
                 w_vec.push(n);
             }
+            // 处理错误
+            if w_vec.len() == 0 {
+                eprintln!("没有支持的控制器!");
+                std::process::exit(-1);
+            }
+            // 处理实例，最多4个
+            if w_vec.len() > 4 {
+                w_vec.truncate(4);
+            }
+            // 分配给每个实例的时间
+            let t = Duration::from_millis((400 / w_vec.len())
+                .try_into()
+                .unwrap());
             // 控制多个实例
             loop {
                 let timer = Instant::now();
                 for w in &mut w_vec {
-                    w.run();
+                    w.run(t);
                 }
                 if timer.elapsed() < Duration::from_millis(100) {
                     spin_sleep::sleep(Duration::from_millis(100));
@@ -212,14 +225,11 @@ impl Watcher<'_> {
     }
     /* 消耗frametime消息管道所有数据
        返回指定最近帧内是否有超时 */
-    fn get_ft_jank(&mut self, count: u64) -> Result<bool, &'static str> {
+    fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
         use crate::misc;
         let mut ft_vec: Vec<usize> = Vec::new();
         let iter = self.ft_rx.try_iter().peekable();
         ft_vec.extend(iter.map(|x| x.clone()));
-        if ft_vec.len() < count.try_into().unwrap() {
-            return Err("data too less");
-        }
         ft_vec.reverse();
         ft_vec.truncate(count.try_into().unwrap());
         let fresh_rate = misc::get_refresh_rate();
@@ -231,6 +241,9 @@ impl Watcher<'_> {
                 o >= (1000 * 1000 * 1000 / target_fps * 11 / 10) as usize
             })
             .count();
+        if ft_vec.len() < count.try_into().unwrap() {
+            return Err(jank_count > 3);
+        }
         Ok(jank_count > 3)
     }
     /* 等待指定时间，并且返回指定时间通过fps看是否掉帧 */
