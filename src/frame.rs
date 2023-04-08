@@ -91,6 +91,9 @@ impl Watcher<'_> {
                     self.inline_mode = Mode::DailyMode(a);
                     self.daily_reset();
                 }
+                if !self.controller.d_support() {
+                    return;
+                }
                 let target_fps = self.get_target_fps();
                 let fps_janked = self.get_fps_jank(Duration::from_millis(300));
                 let ft_janked = match self.get_ft_jank(target_fps) {
@@ -195,8 +198,12 @@ impl Watcher<'_> {
             }
             // 控制多个实例
             loop {
+                let timer = Instant::now();
                 for w in &mut w_vec {
                     w.run();
+                }
+                if timer.elapsed() < Duration::from_millis(100) {
+                    spin_sleep::sleep(Duration::from_millis(100));
                 }
             }
         }

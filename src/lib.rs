@@ -28,6 +28,8 @@ pub trait WatcherNeed {
 
 /* 控制器类型必须实现该trait */
 pub trait ControllerNeed {
+    // 是否支持日用模式
+    fn d_support(&self) -> bool;
     // 检测是否支持该控制器
     fn support(&self) -> bool;
     // 游戏内增加性能和功耗的方法

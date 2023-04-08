@@ -40,6 +40,9 @@ impl Gpu {
 }
 
 impl ControllerNeed for Gpu{
+    fn d_support(&self) -> bool {
+        true
+    }
     // 检测是否支持该控制器
     fn support(&self) -> bool {
         misc::test_file("/proc/gpufreqv2/fix_target_opp_index")
