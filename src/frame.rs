@@ -84,7 +84,6 @@ impl Watcher<'_> {
     
     // fas运行逻辑
     fn run(&mut self, t: Duration) {
-        self.daily_reset();
         match Watcher::get_current() {
             Mode::DailyMode(a) => {
                 if self.inline_mode != Mode::DailyMode(a) {

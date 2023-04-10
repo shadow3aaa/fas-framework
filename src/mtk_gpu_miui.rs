@@ -48,15 +48,15 @@ impl ControllerNeed for Gpu{
         misc::test_file("/proc/gpufreqv2/fix_target_opp_index")
     }
     fn g_down(&self) {
-        if Gpu::get_cur() + 2 <= self.max {
-            Gpu::write(Gpu::get_cur() + 2);
+        if Gpu::get_cur() + 1 <= self.max {
+            Gpu::write(Gpu::get_cur() + 1);
         } else {
             Gpu::write(self.max);
         }
     }
     fn g_up(&self) {
-        if Gpu::get_cur() >= 2 {
-            Gpu::write(Gpu::get_cur() - 2);
+        if Gpu::get_cur() >= 1 {
+            Gpu::write(Gpu::get_cur() - 1);
         } else {
             Gpu::write(0);
         }
