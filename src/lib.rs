@@ -7,7 +7,8 @@ use crossbeam_channel::Receiver;
 #[derive(PartialEq)]
 pub enum Mode {
     DailyMode(u64),
-    GameMode
+    GameMode,
+    None
 }
 
 pub enum Jank {

@@ -44,6 +44,9 @@ impl Watcher<'_> {
                         return self.target_fps;
                     }
                 }
+            },
+            Mode::None => {
+                return 0;
             }
         }
     }
@@ -150,7 +153,8 @@ impl Watcher<'_> {
                     },
                     _ => {}
                 }
-            }
+            },
+            Mode::None => {}
         }
     }
     // 传入具体实现的监视器列表，匹配第一个支持的
@@ -190,7 +194,7 @@ impl Watcher<'_> {
                     fps_fn ,
                     target_fps_rx : target_fps_rx.clone(),
                     target_fps : 120,
-                    inline_mode : Mode::DailyMode(120),
+                    inline_mode : Mode::None,
                     janked : false
                 };
                 w_vec.push(n);
@@ -265,6 +269,9 @@ impl Watcher<'_> {
                 } else {
                     return Jank::UnJanked;
                 }
+            }
+            Mode::None => {
+                return Jank::UnJanked;
             }
         }
     }
