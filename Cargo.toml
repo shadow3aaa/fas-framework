@@ -8,6 +8,8 @@ edition = "2021"
 [profile.release]
 lto = "fat"
 codegen-units = 1
+linker = "lld"
+emit = "llvm-ir"
 opt-level = 'z'
 
 [dependencies]
