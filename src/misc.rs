@@ -1,19 +1,13 @@
 pub fn bound_to_little() {
     let cpu0 = std::fs::read_to_string("/sys/devices/system/cpu/cpufreq/policy0/related_cpus");
-    let cpu0 = match cpu0 {
-        Ok(o) => o,
-        Err(e) => {
-            eprintln!("{}", e);
-            return;
-        }
-    };
-    
-    let cpu0 :Vec<&str> = cpu0.split_whitespace().collect();
-    let cpu0 :Vec<usize> = cpu0
-        .iter()
-        .map(|s| s.trim().parse().unwrap())
+
+    let cpu0: Vec<usize> = cpu0
+        .unwrap_or_default()
+        .split_whitespace()
+        .map(|s| s.trim().parse().unwrap_or(0))
         .collect();
-    affinity::set_thread_affinity(&cpu0).unwrap();
+
+    affinity::set_thread_affinity(&cpu0).unwrap_or_default();
 }
 
 pub fn exec_cmd(command :&str, args :&[&str]) -> Result<String, i32> {
@@ -24,7 +18,7 @@ pub fn exec_cmd(command :&str, args :&[&str]) -> Result<String, i32> {
     
     match output {
         Ok(o) => {
-            Ok(String::from_utf8(o.stdout).expect("utf8 error"))
+            Ok(String::from_utf8_lossy(&o.stdout).into_owned())
         }
         Err(e) => {
             eprintln!("{}", e);
@@ -87,8 +81,13 @@ R: Send + 'static,
     });
     let s = Instant::now();
     while s.elapsed() < t {
-        let x = rx.recv().unwrap();
-        r.push(x);
+        let x = rx.recv();
+        match x {
+            Ok(o) => {
+                r.push(o);
+            },
+            Err(_) => {}
+        }
     }
     drop(rx);
     if r.is_empty() {
@@ -157,19 +156,30 @@ pub fn get_refresh_rate() -> u64 {
     cut(&c, ":", 1)
         .trim()
         .parse::<u64>()
-        .unwrap()
+        .unwrap_or(0)
 }
 
-pub fn look_for_line<'a>(s: &'a str, t: &str) -> &'a str {
-    s.lines()
-        .find(| l | l.contains(t))
-        .unwrap_or("")
-}
-
+#[inline]
 pub fn look_for_head<'a>(s: &'a str, h: usize) -> Option<&'a str>{
     s.lines().nth(h)
 }
 
+#[inline]
 pub fn look_for_tail<'a>(s: &'a str, t: usize) -> Option<&'a str>{
     s.lines().rev().nth(t)
+}
+
+#[inline]
+pub fn next_multiple<T>(input_num: T, multiple: T) -> T
+where
+    T: std::ops::Rem<Output = T> + std::ops::AddAssign + std::ops::SubAssign + std::cmp::PartialOrd + Copy,
+{
+    let mut remainder = input_num % multiple;
+    remainder -= input_num;
+    remainder += multiple;
+    if input_num <= remainder {
+        input_num
+    } else {
+        remainder
+    }
 }

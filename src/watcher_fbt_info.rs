@@ -10,14 +10,21 @@ impl FBTWatcher {
             .unwrap();
         let fbt_info: Vec<&str> = fbt_info.lines()
             .collect();
-        let fbt_info = fbt_info.get(8)
-            .unwrap();
+        let fbt_info = match fbt_info.get(8) {
+            Some(o) => o,
+            None => {
+                return 0;
+            }
+        };
         let fbt_info: Vec<&str> = fbt_info.split_whitespace()
             .collect();
-        fbt_info.get(6)
-            .unwrap()
-            .parse::<usize>()
-            .unwrap()
+        match fbt_info.get(6) {
+            Some(o) => {
+                o.parse::<usize>()
+                .unwrap()
+            }
+            None => 0
+        }
     }
     pub fn give() -> Box<dyn WatcherNeed> {
         Box::new(FBTWatcher{})
@@ -59,7 +66,7 @@ impl WatcherNeed for FBTWatcher {
             let sleeper = SpinSleeper::default();
     
             let data_a = exec_cmd("service", &["call", "SurfaceFlinger", "1013"])
-                .unwrap();
+                .expect("Failed to exec service command");
             let now = Instant::now();
             let data_a = cut(&cut(&data_a, "(", 1), "\'", 0);
             let data_a = u64::from_str_radix(&data_a, 16).unwrap();
@@ -67,7 +74,7 @@ impl WatcherNeed for FBTWatcher {
             sleeper.sleep(avg_time);
     
             let data_b = exec_cmd("service", &["call", "SurfaceFlinger", "1013"])
-                .unwrap();
+                .expect("Failed to exec service command");
             let data_b = cut(&cut(&data_b, "(", 1), "\'", 0);
             let data_b = u64::from_str_radix(&data_b, 16).unwrap();
             (data_b - data_a) * 1000 / (now.elapsed().as_millis() as u64)

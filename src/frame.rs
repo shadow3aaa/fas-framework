@@ -1,6 +1,6 @@
 use std::time::Duration;
 use crossbeam_channel::{bounded, Receiver};
-use crate::{WatcherNeed, Mode, ControllerNeed, Jank};
+use crate::{WatcherNeed, Mode, ControllerNeed, Jank, misc};
 
 pub struct Watcher<'a> {
     controller: &'a Box<dyn ControllerNeed>,
@@ -19,7 +19,6 @@ enum UpOrDown {
 
 impl Watcher<'_> {
     fn get_current() -> Mode {
-        use crate::misc;
         match misc::ask_is_game() {
             true => {
                 return Mode::GameMode;
@@ -37,7 +36,7 @@ impl Watcher<'_> {
             Mode::GameMode => {
                 match self.target_fps_rx.try_recv() {
                     Ok(o) => {
-                        self.target_fps = o;
+                        self.target_fps = misc::next_multiple(o, 5);
                         return self.target_fps;
                     }
                     Err(_) => {
@@ -229,7 +228,6 @@ impl Watcher<'_> {
     /* 消耗frametime消息管道所有数据
        返回指定最近帧内是否有超时 */
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
-        use crate::misc;
         let mut ft_vec: Vec<usize> = Vec::new();
         let iter = self.ft_rx.try_iter().peekable();
         ft_vec.extend(iter.map(|x| x.clone()));

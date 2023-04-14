@@ -8,7 +8,7 @@ edition = "2021"
 [profile.release]
 lto = "fat"
 codegen-units = 1
-opt-level = 'z'
+opt-level = 3
 
 [dependencies]
 affinity = "0.1.2"
