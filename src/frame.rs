@@ -48,24 +48,27 @@ impl Watcher<'_> {
     }
     
     fn game_freq(&mut self, u: UpOrDown) {
+        if self.last_do != u {
+            self.last_count = 0;
+        } else {
+            self.last_count += 1;
+        }
         match u {
             UpOrDown::Up => {
                 self.controller.g_up();
-                self.last_do = UpOrDown::Up;
             },
             UpOrDown::Down => {
                 if self.last_do != UpOrDown::Up {
                     self.controller.g_down();
                 }
-                self.last_do = UpOrDown::Down;
             },
-            UpOrDown::None => {
-                self.last_do = UpOrDown::None;
-            }
+            UpOrDown::None => ()
         }
+        self.last_do = u;
     }
     
     fn daily_freq(&mut self, u: UpOrDown) {
+        self.last_count = 0;
         match u {
             UpOrDown::Up => {
                 self.controller.d_up();
@@ -74,21 +77,21 @@ impl Watcher<'_> {
                 if self.last_do != UpOrDown::Up {
                     self.controller.d_down();
                 }
-                self.last_do = UpOrDown::Down;
             },
-            UpOrDown::None => {
-                self.last_do = UpOrDown::None;
-            }
+            UpOrDown::None => ()
         }
+        self.last_do = u;
     }
     
     fn game_reset(&mut self) {
         self.last_do = UpOrDown::None;
+        self.last_count = 0;
         self.controller.g_reset();
     }
     
     fn daily_reset(&mut self) {
         self.last_do = UpOrDown::None;
+        self.last_count = 0;
         self.controller.d_reset();
     }
     
