@@ -8,8 +8,9 @@ pub struct Watcher<'a> {
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
     target_fps: u64,
-    inline_mode: Mode,
-    inline_last: UpOrDown
+    last_mode: Mode,
+    last_do: UpOrDown,
+    last_count: i32
 }
 
 impl Watcher<'_> {
@@ -50,16 +51,16 @@ impl Watcher<'_> {
         match u {
             UpOrDown::Up => {
                 self.controller.g_up();
-                self.inline_last = UpOrDown::Up;
+                self.last_do = UpOrDown::Up;
             },
             UpOrDown::Down => {
-                if self.inline_last != UpOrDown::Up {
+                if self.last_do != UpOrDown::Up {
                     self.controller.g_down();
                 }
-                self.inline_last = UpOrDown::Down;
+                self.last_do = UpOrDown::Down;
             },
             UpOrDown::None => {
-                self.inline_last = UpOrDown::None;
+                self.last_do = UpOrDown::None;
             }
         }
     }
@@ -70,24 +71,24 @@ impl Watcher<'_> {
                 self.controller.d_up();
             },
             UpOrDown::Down => {
-                if self.inline_last != UpOrDown::Up {
+                if self.last_do != UpOrDown::Up {
                     self.controller.d_down();
                 }
-                self.inline_last = UpOrDown::Down;
+                self.last_do = UpOrDown::Down;
             },
             UpOrDown::None => {
-                self.inline_last = UpOrDown::None;
+                self.last_do = UpOrDown::None;
             }
         }
     }
     
     fn game_reset(&mut self) {
-        self.inline_last = UpOrDown::None;
+        self.last_do = UpOrDown::None;
         self.controller.g_reset();
     }
     
     fn daily_reset(&mut self) {
-        self.inline_last = UpOrDown::None;
+        self.last_do = UpOrDown::None;
         self.controller.d_reset();
     }
     
@@ -95,8 +96,8 @@ impl Watcher<'_> {
     fn run(&mut self, t: Duration) {
         match Watcher::get_current() {
             Mode::DailyMode(a) => {
-                if self.inline_mode != Mode::DailyMode(a) {
-                    self.inline_mode = Mode::DailyMode(a);
+                if self.last_mode != Mode::DailyMode(a) {
+                    self.last_mode = Mode::DailyMode(a);
                     self.daily_reset();
                 }
                 if !self.controller.d_support() {
@@ -127,8 +128,8 @@ impl Watcher<'_> {
                 }
             },
             Mode::GameMode => {
-                if self.inline_mode != Mode::GameMode {
-                    self.inline_mode = Mode::GameMode;
+                if self.last_mode != Mode::GameMode {
+                    self.last_mode = Mode::GameMode;
                     self.game_reset();
                 }
                 let target_fps = self.get_target_fps();
@@ -194,8 +195,9 @@ impl Watcher<'_> {
                     fps_fn ,
                     target_fps_rx : target_fps_rx.clone(),
                     target_fps : 120,
-                    inline_mode : Mode::None,
-                    inline_last : UpOrDown::None
+                    last_mode : Mode::None,
+                    last_do : UpOrDown::None,
+                    last_count : 0
                 };
                 w_vec.push(n);
             }
