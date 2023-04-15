@@ -24,5 +24,7 @@ rustup target add aarch64-unknown-linux-musl
 cargo build --target aarch64-unknown-linux-musl
 # release
 cargo build --target aarch64-unknown-linux-musl --release
+# Or
+bash ./build.sh
 # 编译生成的二进制文件在fas-framework/target/aarch64-unknown-linux-musl/release/下
 ```
