@@ -55,11 +55,15 @@ impl Watcher<'_> {
         }
         match u {
             UpOrDown::Up => {
-                self.controller.g_up();
+                for _ in 1..(self.last_count + 1) {
+                    self.controller.g_up();
+                }
             },
             UpOrDown::Down => {
                 if self.last_do != UpOrDown::Up {
-                    self.controller.g_down();
+                    for _ in 1..(self.last_count + 1) {
+                        self.controller.g_down();
+                    }
                 }
             },
             UpOrDown::None => ()
