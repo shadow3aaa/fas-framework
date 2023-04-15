@@ -8,6 +8,7 @@ impl Gpu {
     fn write(o: u32) {
         misc::write_file(&o.to_string(), "/proc/gpufreqv2/fix_target_opp_index");
     }
+    
     fn get_cur(&self) -> u32 {
         use std::fs;
         let cur = fs::read_to_string("/proc/gpufreqv2/gpufreq_status")
@@ -24,6 +25,7 @@ impl Gpu {
             .parse()
             .unwrap_or(self.max)
     }
+    
     pub fn give() -> Box<dyn ControllerNeed> {
         use std::fs;
         let opp = fs::read_to_string("/proc/gpufreqv2/stack_signed_opp_table")

@@ -17,6 +17,13 @@ pub enum Jank {
     Static
 }
 
+#[derive(PartialEq)]
+pub enum UpOrDown {
+    Up,
+    Down,
+    None
+}
+
 /* 监视器类型必须实现该trait */
 pub trait WatcherNeed {
     // 检测是否支持该监视器

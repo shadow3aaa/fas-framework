@@ -1,6 +1,6 @@
 use std::time::Duration;
 use crossbeam_channel::{bounded, Receiver};
-use crate::{WatcherNeed, Mode, ControllerNeed, Jank, misc};
+use crate::{WatcherNeed, Mode, UpOrDown, ControllerNeed, Jank, misc};
 
 pub struct Watcher<'a> {
     controller: &'a Box<dyn ControllerNeed>,
@@ -9,12 +9,7 @@ pub struct Watcher<'a> {
     target_fps_rx: Receiver<u64>,
     target_fps: u64,
     inline_mode: Mode,
-    janked: bool
-}
-
-enum UpOrDown {
-    Up,
-    Down
+    inline_last: UpOrDown
 }
 
 impl Watcher<'_> {
@@ -28,6 +23,7 @@ impl Watcher<'_> {
             }
         }
     }
+    
     fn get_target_fps(&mut self) -> u64 {
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
@@ -49,38 +45,49 @@ impl Watcher<'_> {
             }
         }
     }
+    
     fn game_freq(&mut self, u: UpOrDown) {
         match u {
             UpOrDown::Up => {
                 self.controller.g_up();
+                self.inline_last = UpOrDown::Up;
             },
             UpOrDown::Down => {
-                if self.janked {
-                    return;
+                if self.inline_last != UpOrDown::Up {
+                    self.controller.g_down();
                 }
-                self.controller.g_down();
+                self.inline_last = UpOrDown::Down;
+            },
+            UpOrDown::None => {
+                self.inline_last = UpOrDown::None;
             }
         }
     }
+    
     fn daily_freq(&mut self, u: UpOrDown) {
         match u {
             UpOrDown::Up => {
                 self.controller.d_up();
             },
             UpOrDown::Down => {
-                if self.janked {
-                    return;
+                if self.inline_last != UpOrDown::Up {
+                    self.controller.d_down();
                 }
-                self.controller.d_down();
+                self.inline_last = UpOrDown::Down;
+            },
+            UpOrDown::None => {
+                self.inline_last = UpOrDown::None;
             }
         }
     }
+    
     fn game_reset(&mut self) {
-        self.janked = false;
+        self.inline_last = UpOrDown::None;
         self.controller.g_reset();
     }
+    
     fn daily_reset(&mut self) {
-        self.janked = false;
+        self.inline_last = UpOrDown::None;
         self.controller.d_reset();
     }
     
@@ -105,20 +112,16 @@ impl Watcher<'_> {
                 };
                 match fps_janked {
                     Jank::Janked => {
-                        self.janked = true;
                         self.daily_freq(UpOrDown::Up);
                     },
                     Jank::UnJanked => {
                         if ft_janked {
-                            self.janked = true;
                             self.daily_freq(UpOrDown::Up);
                         } else {
-                            self.janked = false;
                             self.daily_freq(UpOrDown::Down);
                         }
                     },
                     Jank::Static => {
-                        self.janked = false;
                         self.daily_freq(UpOrDown::Down);
                     }
                 }
@@ -138,24 +141,22 @@ impl Watcher<'_> {
                 };
                 match fps_janked {
                     Jank::Janked => {
-                        self.janked = true;
                         self.game_freq(UpOrDown::Up);
                     },
                     Jank::UnJanked => {
                         if ft_janked {
-                            self.janked = true;
                             self.game_freq(UpOrDown::Up);
                         } else {
-                            self.janked = false;
                             self.game_freq(UpOrDown::Down);
                         }
                     },
-                    _ => {}
+                    _ => ()
                 }
             },
-            Mode::None => {}
+            Mode::None => ()
         }
     }
+    
     // 传入具体实现的监视器列表，匹配第一个支持的
     pub fn start<'a>(w: &'a[Box<dyn WatcherNeed>], c: &'a[Box<dyn ControllerNeed>]) {
         use std::{thread, time::Instant};
@@ -194,7 +195,7 @@ impl Watcher<'_> {
                     target_fps_rx : target_fps_rx.clone(),
                     target_fps : 120,
                     inline_mode : Mode::None,
-                    janked : false
+                    inline_last : UpOrDown::None
                 };
                 w_vec.push(n);
             }
@@ -225,6 +226,7 @@ impl Watcher<'_> {
         eprint!("似乎该程序不支持你的设备");
         std::process::exit(-1);
     }
+    
     /* 消耗frametime消息管道所有数据
        返回指定最近帧内是否有超时 */
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
@@ -247,6 +249,7 @@ impl Watcher<'_> {
         }
         Ok(jank_count > 3)
     }
+    
     /* 等待指定时间，并且返回指定时间通过fps看是否掉帧 */
     fn get_fps_jank(&mut self, t: Duration) -> Jank {
         let fps = (self.fps_fn)(t);
