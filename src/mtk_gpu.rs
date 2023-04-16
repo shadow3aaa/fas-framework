@@ -1,4 +1,4 @@
-use fas_framework::{ControllerNeed, misc};
+use fas_framework::{misc, ControllerNeed};
 
 pub struct Gpu {
     max: u32,
@@ -8,11 +8,10 @@ impl Gpu {
     fn write(o: u32) {
         misc::write_file(&o.to_string(), "/proc/gpufreqv2/fix_target_opp_index");
     }
-    
+
     fn get_cur(&self) -> u32 {
         use std::fs;
-        let cur = fs::read_to_string("/proc/gpufreqv2/gpufreq_status")
-            .unwrap();
+        let cur = fs::read_to_string("/proc/gpufreqv2/gpufreq_status").unwrap();
         let cur = match misc::look_for_head(&cur, 7) {
             Some(o) => o,
             None => {
@@ -20,33 +19,26 @@ impl Gpu {
             }
         };
         let cur = misc::cut(cur, ":", 1);
-        misc::cut(&cur, ",", 0)
-            .trim()
-            .parse()
-            .unwrap_or(self.max)
+        misc::cut(&cur, ",", 0).trim().parse().unwrap_or(self.max)
     }
-    
+
     pub fn give() -> Box<dyn ControllerNeed> {
         use std::fs;
         let opp = fs::read_to_string("/proc/gpufreqv2/stack_signed_opp_table")
             .expect("Failed to read opp");
         let max = match misc::look_for_tail(&opp, 0) {
             Some(o) => o,
-            None => ""
+            None => "",
         };
         let max = misc::cut(&max, "*", 0);
         let max = misc::cut(&max, "[", 1);
-        let max = max.trim()
-            .parse()
-            .unwrap();
+        let max = max.trim().parse().unwrap();
         misc::write_file("0", "/proc/gpufreqv2/fix_target_opp_index");
-        Box::new(Gpu {
-            max
-        })
+        Box::new(Gpu { max })
     }
 }
 
-impl ControllerNeed for Gpu{
+impl ControllerNeed for Gpu {
     fn d_support(&self) -> bool {
         true
     }

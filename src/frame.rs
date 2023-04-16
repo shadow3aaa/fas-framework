@@ -1,6 +1,6 @@
-use std::time::Duration;
+use crate::{misc, ControllerNeed, Jank, Mode, UpOrDown, WatcherNeed};
 use crossbeam_channel::{bounded, Receiver};
-use crate::{WatcherNeed, Mode, UpOrDown, ControllerNeed, Jank, misc};
+use std::time::Duration;
 
 pub struct Watcher<'a> {
     controller: &'a Box<dyn ControllerNeed>,
@@ -10,7 +10,7 @@ pub struct Watcher<'a> {
     target_fps: u64,
     last_mode: Mode,
     last_do: UpOrDown,
-    last_count: i32
+    last_count: i32,
 }
 
 impl Watcher<'_> {
@@ -18,27 +18,25 @@ impl Watcher<'_> {
         match misc::ask_is_game() {
             true => {
                 return Mode::GameMode;
-            },
+            }
             false => {
                 return Mode::DailyMode(misc::get_refresh_rate());
             }
         }
     }
-    
+
     fn get_target_fps(&mut self) -> u64 {
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
                 return f;
-            },
-            Mode::GameMode => {
-                match self.target_fps_rx.try_recv() {
-                    Ok(o) => {
-                        self.target_fps = misc::next_multiple(o, 5);
-                        return self.target_fps;
-                    }
-                    Err(_) => {
-                        return self.target_fps;
-                    }
+            }
+            Mode::GameMode => match self.target_fps_rx.try_recv() {
+                Ok(o) => {
+                    self.target_fps = misc::next_multiple(o, 5);
+                    return self.target_fps;
+                }
+                Err(_) => {
+                    return self.target_fps;
                 }
             },
             Mode::None => {
@@ -46,7 +44,7 @@ impl Watcher<'_> {
             }
         }
     }
-    
+
     fn game_freq(&mut self, u: UpOrDown) {
         if self.last_do != u {
             self.last_count = 0;
@@ -58,47 +56,47 @@ impl Watcher<'_> {
                 for _ in 1..(self.last_count + 1) {
                     self.controller.g_up();
                 }
-            },
+            }
             UpOrDown::Down => {
                 if self.last_do != UpOrDown::Up {
                     for _ in 1..(self.last_count + 1) {
                         self.controller.g_down();
                     }
                 }
-            },
-            UpOrDown::None => ()
+            }
+            UpOrDown::None => (),
         }
         self.last_do = u;
     }
-    
+
     fn daily_freq(&mut self, u: UpOrDown) {
         self.last_count = 0;
         match u {
             UpOrDown::Up => {
                 self.controller.d_up();
-            },
+            }
             UpOrDown::Down => {
                 if self.last_do != UpOrDown::Up {
                     self.controller.d_down();
                 }
-            },
-            UpOrDown::None => ()
+            }
+            UpOrDown::None => (),
         }
         self.last_do = u;
     }
-    
+
     fn game_reset(&mut self) {
         self.last_do = UpOrDown::None;
         self.last_count = 0;
         self.controller.g_reset();
     }
-    
+
     fn daily_reset(&mut self) {
         self.last_do = UpOrDown::None;
         self.last_count = 0;
         self.controller.d_reset();
     }
-    
+
     // fas运行逻辑
     fn run(&mut self, t: Duration) {
         match Watcher::get_current() {
@@ -114,26 +112,24 @@ impl Watcher<'_> {
                 let fps_janked = self.get_fps_jank(Duration::from_millis(300));
                 let ft_janked = match self.get_ft_jank(target_fps) {
                     Ok(o) => o,
-                    Err(_) => {
-                        false
-                    }
+                    Err(_) => false,
                 };
                 match fps_janked {
                     Jank::Janked => {
                         self.daily_freq(UpOrDown::Up);
-                    },
+                    }
                     Jank::UnJanked => {
                         if ft_janked {
                             self.daily_freq(UpOrDown::Up);
                         } else {
                             self.daily_freq(UpOrDown::Down);
                         }
-                    },
+                    }
                     Jank::Static => {
                         self.daily_freq(UpOrDown::Down);
                     }
                 }
-            },
+            }
             Mode::GameMode => {
                 if self.last_mode != Mode::GameMode {
                     self.last_mode = Mode::GameMode;
@@ -143,30 +139,28 @@ impl Watcher<'_> {
                 let fps_janked = self.get_fps_jank(t);
                 let ft_janked = match self.get_ft_jank(target_fps / 12) {
                     Ok(o) => o,
-                    Err(o) => {
-                        o
-                    }
+                    Err(o) => o,
                 };
                 match fps_janked {
                     Jank::Janked => {
                         self.game_freq(UpOrDown::Up);
-                    },
+                    }
                     Jank::UnJanked => {
                         if ft_janked {
                             self.game_freq(UpOrDown::Up);
                         } else {
                             self.game_freq(UpOrDown::Down);
                         }
-                    },
-                    _ => ()
+                    }
+                    _ => (),
                 }
-            },
-            Mode::None => ()
+            }
+            Mode::None => (),
         }
     }
-    
+
     // 传入具体实现的监视器列表，匹配第一个支持的
-    pub fn start<'a>(w: &'a[Box<dyn WatcherNeed>], c: &'a[Box<dyn ControllerNeed>]) {
+    pub fn start<'a>(w: &'a [Box<dyn WatcherNeed>], c: &'a [Box<dyn ControllerNeed>]) {
         use std::{thread, time::Instant};
         for i in w {
             if !i.support() {
@@ -197,14 +191,14 @@ impl Watcher<'_> {
                     continue;
                 }
                 let n = Watcher {
-                    ft_rx : ft_rx.clone(),
-                    controller : ci,
-                    fps_fn ,
-                    target_fps_rx : target_fps_rx.clone(),
-                    target_fps : 120,
-                    last_mode : Mode::None,
-                    last_do : UpOrDown::None,
-                    last_count : 0
+                    ft_rx: ft_rx.clone(),
+                    controller: ci,
+                    fps_fn,
+                    target_fps_rx: target_fps_rx.clone(),
+                    target_fps: 120,
+                    last_mode: Mode::None,
+                    last_do: UpOrDown::None,
+                    last_count: 0,
                 };
                 w_vec.push(n);
             }
@@ -218,9 +212,7 @@ impl Watcher<'_> {
                 w_vec.truncate(4);
             }
             // 分配给每个实例的时间
-            let t = Duration::from_millis((400 / w_vec.len())
-                .try_into()
-                .unwrap());
+            let t = Duration::from_millis((400 / w_vec.len()).try_into().unwrap());
             // 控制多个实例
             loop {
                 let timer = Instant::now();
@@ -235,9 +227,9 @@ impl Watcher<'_> {
         eprint!("似乎该程序不支持你的设备");
         std::process::exit(-1);
     }
-    
+
     /* 消耗frametime消息管道所有数据
-       返回指定最近帧内是否有超时 */
+    返回指定最近帧内是否有超时 */
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
         let mut ft_vec: Vec<usize> = Vec::new();
         let iter = self.ft_rx.try_iter().peekable();
@@ -246,8 +238,9 @@ impl Watcher<'_> {
         ft_vec.truncate(count.try_into().unwrap());
         let fresh_rate = misc::get_refresh_rate();
         let target_fps = self.get_target_fps();
-        let jank_count = ft_vec.iter()
-            .filter(| &v | {
+        let jank_count = ft_vec
+            .iter()
+            .filter(|&v| {
                 let sc_f = (1000 * 1000 * 1000 / fresh_rate) as usize;
                 let o = *v % sc_f;
                 o >= (1000 * 1000 * 1000 / target_fps * 11 / 10) as usize
@@ -258,7 +251,7 @@ impl Watcher<'_> {
         }
         Ok(jank_count > 3)
     }
-    
+
     /* 等待指定时间，并且返回指定时间通过fps看是否掉帧 */
     fn get_fps_jank(&mut self, t: Duration) -> Jank {
         let fps = (self.fps_fn)(t);
@@ -267,7 +260,11 @@ impl Watcher<'_> {
             Mode::DailyMode(f) => {
                 if fps > f / 12 && fps < f - 10 {
                     return Jank::Janked;
-                } else if fps <= f / 4 || (fps > 30 && fps < 38 && target_fps != 30) || (fps > 60 && fps < 68 && target_fps != 60) || (fps > 120 && fps < 128 && target_fps != 120) {
+                } else if fps <= f / 4
+                    || (fps > 30 && fps < 38 && target_fps != 30)
+                    || (fps > 60 && fps < 68 && target_fps != 60)
+                    || (fps > 120 && fps < 128 && target_fps != 120)
+                {
                     return Jank::Static;
                 } else {
                     return Jank::UnJanked;

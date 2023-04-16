@@ -8,7 +8,9 @@ mod mtk_gpu_miui;
 
 fn main() {
     misc::bound_to_little();
-    let miui = !misc::exec_cmd("getprop", &["ro.miui.ui.version.code"]).unwrap().is_empty();
+    let miui = !misc::exec_cmd("getprop", &["ro.miui.ui.version.code"])
+        .unwrap()
+        .is_empty();
     let watcher_list = [FBTWatcher::give()];
     let mut controller_list = Vec::new();
     if !miui {

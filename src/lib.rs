@@ -1,27 +1,27 @@
 pub mod frame;
 pub mod misc;
 
-use std::time::Duration;
 use crossbeam_channel::Receiver;
+use std::time::Duration;
 
 #[derive(PartialEq)]
 pub enum Mode {
     DailyMode(u64),
     GameMode,
-    None
+    None,
 }
 
 pub enum Jank {
     Janked,
     UnJanked,
-    Static
+    Static,
 }
 
 #[derive(PartialEq)]
 pub enum UpOrDown {
     Up,
     Down,
-    None
+    None,
 }
 
 /* 监视器类型必须实现该trait */

@@ -10,16 +10,12 @@ pub fn bound_to_little() {
     affinity::set_thread_affinity(&cpu0).unwrap_or_default();
 }
 
-pub fn exec_cmd(command :&str, args :&[&str]) -> Result<String, i32> {
+pub fn exec_cmd(command: &str, args: &[&str]) -> Result<String, i32> {
     use std::process::Command;
-    let output = Command::new(command)
-        .args(args)
-        .output();
-    
+    let output = Command::new(command).args(args).output();
+
     match output {
-        Ok(o) => {
-            Ok(String::from_utf8_lossy(&o.stdout).into_owned())
-        }
+        Ok(o) => Ok(String::from_utf8_lossy(&o.stdout).into_owned()),
         Err(e) => {
             eprintln!("{}", e);
             Err(-1)
@@ -30,14 +26,17 @@ pub fn exec_cmd(command :&str, args :&[&str]) -> Result<String, i32> {
 pub fn cut(str: &str, sym: &str, f: usize) -> String {
     let fs: Vec<&str> = str.split(sym).collect();
     match fs.get(f) {
-        Some(s) => s.trim()
-            .to_string(),
-        None => String::new()
+        Some(s) => s.trim().to_string(),
+        None => String::new(),
     }
 }
 
 pub fn write_file(content: &str, path: &str) {
-    use std::{io::Write, os::unix::fs::PermissionsExt, fs::{OpenOptions, set_permissions}};
+    use std::{
+        fs::{set_permissions, OpenOptions},
+        io::Write,
+        os::unix::fs::PermissionsExt,
+    };
     // println!("path: {}, value: {}", &content, &path);
     match set_permissions(path, PermissionsExt::from_mode(0o644)) {
         Ok(()) => {
@@ -45,16 +44,15 @@ pub fn write_file(content: &str, path: &str) {
                 .write(true)
                 .truncate(true)
                 .create(true)
-                .open(path) {
-                    Ok(mut file) => {
-                        match file.write_all(content.as_bytes()) {
-                            Ok(()) => {}
-                            Err(e) => eprintln!("Write failed: {}", e),
-                        }
-                    },
-                    Err(e) => eprintln!("Open failed: {}", e),
-                }
-        },
+                .open(path)
+            {
+                Ok(mut file) => match file.write_all(content.as_bytes()) {
+                    Ok(()) => {}
+                    Err(e) => eprintln!("Write failed: {}", e),
+                },
+                Err(e) => eprintln!("Open failed: {}", e),
+            }
+        }
         Err(e) => eprintln!("Set permissions failed: {}", e),
     }
 }
@@ -66,8 +64,8 @@ pub fn test_file(x: &str) -> bool {
 use std::time::Duration;
 pub fn timer_exec<F, R>(t: Duration, f: F) -> Option<Vec<R>>
 where
-F: Fn() -> R + Send + 'static,
-R: Send + 'static,
+    F: Fn() -> R + Send + 'static,
+    R: Send + 'static,
 {
     use std::{sync::mpsc, thread, time::Instant};
     let mut r = Vec::new();
@@ -85,7 +83,7 @@ R: Send + 'static,
         match x {
             Ok(o) => {
                 r.push(o);
-            },
+            }
             Err(_) => {}
         }
     }
@@ -98,8 +96,8 @@ R: Send + 'static,
 }
 
 pub fn get_top_app() -> String {
-    use std::path::Path;
     use std::fs;
+    use std::path::Path;
     let mut topapp = String::new();
     if Path::new("/sys/kernel/gbe/gbe2_fg_pid").exists() {
         let pid = fs::read_to_string("/sys/kernel/gbe/gbe2_fg_pid")
@@ -128,7 +126,16 @@ pub fn ask_is_game() -> bool {
     let current_surface_view = exec_cmd("dumpsys", &["SurfaceFlinger", "--list"])
         .expect("Err : Failed to execute dumpsys SurfaceView");
     // 忽略被误判的
-    let ignore = ["tv.danmaku.bili", "com.perol.pixez", "jp.pxv.android", "com.lemurbrowser.exts", "mark.via", "com.tencent.mm", "com.tencent.mobileqq", "com.miui.gallery"];
+    let ignore = [
+        "tv.danmaku.bili",
+        "com.perol.pixez",
+        "jp.pxv.android",
+        "com.lemurbrowser.exts",
+        "mark.via",
+        "com.tencent.mm",
+        "com.tencent.mobileqq",
+        "com.miui.gallery",
+    ];
     if ignore.contains(&&get_top_app()[..]) {
         return false;
     }
@@ -146,33 +153,35 @@ pub fn get_refresh_rate() -> u64 {
     let i = match exec_cmd("dumpsys", &["SurfaceFlinger"])
         .expect("Err : Failed to execute dumpsys SurfaceView")
         .lines()
-        .find(| l | l.contains("refresh-rate")) {
-            Some(o) => o.to_string(),
-            None => {
-                return 0;
-            }
-        };
+        .find(|l| l.contains("refresh-rate"))
+    {
+        Some(o) => o.to_string(),
+        None => {
+            return 0;
+        }
+    };
     let c = cut(&i, ".", 0);
-    cut(&c, ":", 1)
-        .trim()
-        .parse::<u64>()
-        .unwrap_or(0)
+    cut(&c, ":", 1).trim().parse::<u64>().unwrap_or(0)
 }
 
 #[inline]
-pub fn look_for_head<'a>(s: &'a str, h: usize) -> Option<&'a str>{
+pub fn look_for_head<'a>(s: &'a str, h: usize) -> Option<&'a str> {
     s.lines().nth(h)
 }
 
 #[inline]
-pub fn look_for_tail<'a>(s: &'a str, t: usize) -> Option<&'a str>{
+pub fn look_for_tail<'a>(s: &'a str, t: usize) -> Option<&'a str> {
     s.lines().rev().nth(t)
 }
 
 #[inline]
 pub fn next_multiple<T>(input_num: T, multiple: T) -> T
 where
-    T: std::ops::Rem<Output = T> + std::ops::AddAssign + std::ops::SubAssign + std::cmp::PartialOrd + Copy,
+    T: std::ops::Rem<Output = T>
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::cmp::PartialOrd
+        + Copy,
 {
     let mut remainder = input_num % multiple;
     remainder -= input_num;
