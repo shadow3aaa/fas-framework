@@ -47,7 +47,7 @@ impl WatcherNeed for FBTWatcher {
             let frametime = cur_b - cur_a;
             tx.send(frametime).unwrap();
         });
-        return rx;
+        rx
     }
     fn get_fps(&self) -> fn(std::time::Duration) -> u64 {
         fn fps_method(avg_time: std::time::Duration) -> u64 {

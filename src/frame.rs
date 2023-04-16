@@ -17,10 +17,10 @@ impl Watcher<'_> {
     fn get_current() -> Mode {
         match misc::ask_is_game() {
             true => {
-                return Mode::GameMode;
+                Mode::GameMode
             }
             false => {
-                return Mode::DailyMode(misc::get_refresh_rate());
+                Mode::DailyMode(misc::get_refresh_rate())
             }
         }
     }
@@ -28,19 +28,19 @@ impl Watcher<'_> {
     fn get_target_fps(&mut self) -> u64 {
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
-                return f;
+                f
             }
             Mode::GameMode => match self.target_fps_rx.try_recv() {
                 Ok(o) => {
                     self.target_fps = misc::next_multiple(o, 5);
-                    return self.target_fps;
+                    self.target_fps
                 }
                 Err(_) => {
-                    return self.target_fps;
+                    self.target_fps
                 }
             },
             Mode::None => {
-                return 0;
+                0
             }
         }
     }
@@ -110,10 +110,7 @@ impl Watcher<'_> {
                 }
                 let target_fps = self.get_target_fps();
                 let fps_janked = self.get_fps_jank(Duration::from_millis(300));
-                let ft_janked = match self.get_ft_jank(target_fps) {
-                    Ok(o) => o,
-                    Err(_) => false,
-                };
+                let ft_janked = self.get_ft_jank(target_fps).unwrap_or(false);
                 match fps_janked {
                     Jank::Janked => {
                         self.daily_freq(UpOrDown::Up);
@@ -203,7 +200,7 @@ impl Watcher<'_> {
                 w_vec.push(n);
             }
             // 处理错误
-            if w_vec.len() == 0 {
+            if w_vec.is_empty() {
                 eprintln!("没有支持的控制器!");
                 std::process::exit(-1);
             }
@@ -233,7 +230,7 @@ impl Watcher<'_> {
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
         let mut ft_vec: Vec<usize> = Vec::new();
         let iter = self.ft_rx.try_iter().peekable();
-        ft_vec.extend(iter.map(|x| x.clone()));
+        ft_vec.extend(iter);
         ft_vec.reverse();
         ft_vec.truncate(count.try_into().unwrap());
         let fresh_rate = misc::get_refresh_rate();
@@ -259,7 +256,7 @@ impl Watcher<'_> {
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
                 if fps > f / 12 && fps < f - 10 {
-                    return Jank::Janked;
+                    Jank::Janked
                 } else if fps <= f / 4
                     || (fps > 30 && fps < 38 && target_fps != 30)
                     || (fps > 60 && fps < 68 && target_fps != 60)
@@ -272,13 +269,13 @@ impl Watcher<'_> {
             }
             Mode::GameMode => {
                 if fps < self.get_target_fps() - 2 {
-                    return Jank::Janked;
+                    Jank::Janked
                 } else {
-                    return Jank::UnJanked;
+                    Jank::UnJanked
                 }
             }
             Mode::None => {
-                return Jank::UnJanked;
+                Jank::UnJanked
             }
         }
     }

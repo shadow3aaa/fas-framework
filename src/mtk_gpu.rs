@@ -26,11 +26,8 @@ impl Gpu {
         use std::fs;
         let opp = fs::read_to_string("/proc/gpufreqv2/stack_signed_opp_table")
             .expect("Failed to read opp");
-        let max = match misc::look_for_tail(&opp, 0) {
-            Some(o) => o,
-            None => "",
-        };
-        let max = misc::cut(&max, "*", 0);
+        let max = misc::look_for_tail(&opp, 0).unwrap_or("");
+        let max = misc::cut(max, "*", 0);
         let max = misc::cut(&max, "[", 1);
         let max = max.trim().parse().unwrap();
         misc::write_file("0", "/proc/gpufreqv2/fix_target_opp_index");
@@ -47,7 +44,7 @@ impl ControllerNeed for Gpu {
         misc::test_file("/proc/gpufreqv2/fix_target_opp_index")
     }
     fn g_down(&self) {
-        if self.get_cur() + 1 <= self.max {
+        if self.get_cur() < self.max {
             Gpu::write(self.get_cur() + 1);
         } else {
             Gpu::write(self.max);

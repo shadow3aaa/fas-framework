@@ -114,7 +114,7 @@ pub fn get_top_app() -> String {
         .expect("Err : Failed to dumpsys for Topapp");
     for line in dump_top.lines() {
         if line.contains("topResumedActivity=") {
-            topapp = cut(&line, "{", 1);
+            topapp = cut(line, "{", 1);
             topapp = cut(&topapp, "/", 0);
             topapp = cut(&topapp, " ", 2);
         }
@@ -146,7 +146,7 @@ pub fn ask_is_game() -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 
 pub fn get_refresh_rate() -> u64 {
@@ -165,12 +165,12 @@ pub fn get_refresh_rate() -> u64 {
 }
 
 #[inline]
-pub fn look_for_head<'a>(s: &'a str, h: usize) -> Option<&'a str> {
+pub fn look_for_head(s: &str, h: usize) -> Option<&str> {
     s.lines().nth(h)
 }
 
 #[inline]
-pub fn look_for_tail<'a>(s: &'a str, t: usize) -> Option<&'a str> {
+pub fn look_for_tail(s: &str, t: usize) -> Option<&str> {
     s.lines().rev().nth(t)
 }
 
