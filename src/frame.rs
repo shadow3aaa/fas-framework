@@ -16,32 +16,22 @@ pub struct Watcher<'a> {
 impl Watcher<'_> {
     fn get_current() -> Mode {
         match misc::ask_is_game() {
-            true => {
-                Mode::GameMode
-            }
-            false => {
-                Mode::DailyMode(misc::get_refresh_rate())
-            }
+            true => Mode::GameMode,
+            false => Mode::DailyMode(misc::get_refresh_rate()),
         }
     }
 
     fn get_target_fps(&mut self) -> u64 {
         match Watcher::get_current() {
-            Mode::DailyMode(f) => {
-                f
-            }
+            Mode::DailyMode(f) => f,
             Mode::GameMode => match self.target_fps_rx.try_recv() {
                 Ok(o) => {
                     self.target_fps = misc::next_multiple(o, 5);
                     self.target_fps
                 }
-                Err(_) => {
-                    self.target_fps
-                }
+                Err(_) => self.target_fps,
             },
-            Mode::None => {
-                0
-            }
+            Mode::None => 0,
         }
     }
 
@@ -274,9 +264,7 @@ impl Watcher<'_> {
                     Jank::UnJanked
                 }
             }
-            Mode::None => {
-                Jank::UnJanked
-            }
+            Mode::None => Jank::UnJanked,
         }
     }
 }

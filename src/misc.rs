@@ -137,7 +137,8 @@ pub fn ask_is_game() -> bool {
         return false;
     }
     for line in current_surface_view.lines() {
-        if line.contains("SurfaceView[") && line.contains("BLAST") || line.contains("SurfaceView -") {
+        if line.contains("SurfaceView[") && line.contains("BLAST") || line.contains("SurfaceView -")
+        {
             return true;
         }
     }
