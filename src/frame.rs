@@ -3,7 +3,7 @@ use crossbeam_channel::{bounded, Receiver};
 use std::time::Duration;
 
 pub struct Watcher<'a> {
-    controller: &'a Box<dyn ControllerNeed>,
+    controller: &'a dyn ControllerNeed,
     ft_rx: Receiver<usize>,
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
@@ -189,7 +189,7 @@ impl Watcher<'_> {
                 }
                 let n = Watcher {
                     ft_rx: ft_rx.clone(),
-                    controller: ci,
+                    controller: &**ci,
                     fps_fn,
                     target_fps_rx: target_fps_rx.clone(),
                     target_fps: 120,
