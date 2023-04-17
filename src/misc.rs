@@ -80,11 +80,8 @@ where
     let s = Instant::now();
     while s.elapsed() < t {
         let x = rx.recv();
-        match x {
-            Ok(o) => {
-                r.push(o);
-            }
-            Err(_) => {}
+        if let Ok(o) = x {
+            r.push(o);
         }
     }
     drop(rx);
