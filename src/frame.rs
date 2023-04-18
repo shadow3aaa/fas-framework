@@ -194,7 +194,7 @@ impl Watcher<'_> {
                 eprintln!("没有支持的控制器!");
                 std::process::exit(-1);
             }
-            // 处理实例，最多4个
+            // 处理Watcher实例，最多4个，因为时间不够
             if w_vec.len() > 4 {
                 w_vec.truncate(4);
             }
@@ -247,18 +247,14 @@ impl Watcher<'_> {
             Mode::DailyMode(f) => {
                 if fps > f / 12 && fps < f - 10 {
                     Jank::Janked
-                } else if fps <= f / 4
-                    || (fps > 30 && fps < 38 && target_fps != 30)
-                    || (fps > 60 && fps < 68 && target_fps != 60)
-                    || (fps > 120 && fps < 128 && target_fps != 120)
-                {
+                } else if fps <= f / 4 {
                     return Jank::Static;
                 } else {
                     return Jank::UnJanked;
                 }
             }
             Mode::GameMode => {
-                if fps < self.get_target_fps() - 2 {
+                if fps < target_fps - 2 {
                     Jank::Janked
                 } else {
                     Jank::UnJanked

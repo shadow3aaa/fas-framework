@@ -6,7 +6,13 @@ pub struct FBTWatcher;
 impl FBTWatcher {
     fn read_ft() -> usize {
         use std::fs;
-        let fbt_info = fs::read_to_string("/sys/kernel/fpsgo/fbt/fbt_info").unwrap();
+        let fbt_info = match fs::read_to_string("/sys/kernel/fpsgo/fbt/fbt_info") {
+            Ok(o) => o,
+            Err(e) => {
+                eprintln!("{}", e);
+                return 0;
+            }
+        };
         let fbt_info: Vec<&str> = fbt_info.lines().collect();
         let fbt_info = match fbt_info.get(8) {
             Some(o) => o,
