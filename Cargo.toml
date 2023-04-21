@@ -9,6 +9,7 @@ edition = "2021"
 lto = "fat"
 codegen-units = 1
 opt-level = 3
+strip = true
 
 [dependencies]
 affinity = "0.1.2"

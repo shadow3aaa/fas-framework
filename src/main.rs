@@ -7,7 +7,7 @@ mod mtk_gpu;
 mod mtk_gpu_miui;
 
 fn main() {
-    misc::bound_to_little();
+    misc::set_self_sched();
     let miui = !misc::exec_cmd("getprop", &["ro.miui.ui.version.code"])
         .unwrap()
         .is_empty();

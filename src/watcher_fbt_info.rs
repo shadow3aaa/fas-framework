@@ -34,7 +34,7 @@ impl FBTWatcher {
 impl WatcherNeed for FBTWatcher {
     fn support(&self) -> bool {
         use fas_framework::misc;
-        misc::test_file("/sys/kernel/fpsgo/fbt/fbt_info")
+        misc::test_path("/sys/kernel/fpsgo/fbt/fbt_info")
     }
     fn get_ft(&self) -> Receiver<usize> {
         use spin_sleep::SpinSleeper;

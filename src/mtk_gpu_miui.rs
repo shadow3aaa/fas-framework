@@ -39,7 +39,7 @@ impl ControllerNeed for Gpu {
     }
     // 检测是否支持该控制器
     fn support(&self) -> bool {
-        misc::test_file("/proc/gpufreqv2/fix_target_opp_index")
+        misc::test_path("/proc/gpufreqv2/fix_target_opp_index")
     }
     fn g_down(&self) {
         if self.get_cur() < self.max {

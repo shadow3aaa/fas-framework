@@ -1,4 +1,7 @@
-pub fn bound_to_little() {
+pub fn set_self_sched() {
+    let self_pid = &std::process::id()
+        .to_string();
+    write_file(self_pid, "/dev/cpuset/background/tasks");
     let cpu0 = std::fs::read_to_string("/sys/devices/system/cpu/cpufreq/policy0/related_cpus");
 
     let cpu0: Vec<usize> = cpu0
@@ -37,7 +40,6 @@ pub fn write_file(content: &str, path: &str) {
         io::Write,
         os::unix::fs::PermissionsExt,
     };
-    // println!("path: {}, value: {}", &content, &path);
     match set_permissions(path, PermissionsExt::from_mode(0o644)) {
         Ok(()) => {
             match OpenOptions::new()
@@ -57,7 +59,7 @@ pub fn write_file(content: &str, path: &str) {
     }
 }
 
-pub fn test_file(x: &str) -> bool {
+pub fn test_path(x: &str) -> bool {
     std::path::Path::new(x).exists()
 }
 
