@@ -1,6 +1,5 @@
 pub fn set_self_sched() {
-    let self_pid = &std::process::id()
-        .to_string();
+    let self_pid = &std::process::id().to_string();
     write_file(self_pid, "/dev/cpuset/background/tasks");
     let cpu0 = std::fs::read_to_string("/sys/devices/system/cpu/cpufreq/policy0/related_cpus");
 
