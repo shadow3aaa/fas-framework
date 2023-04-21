@@ -87,7 +87,7 @@ impl Watcher<'_> {
         self.controller.d_reset();
     }
 
-    // fas运行逻辑
+    // 单个fas模块运行逻辑
     fn run(&mut self, t: Duration) {
         match Watcher::get_current() {
             Mode::DailyMode(a) => {
@@ -206,6 +206,7 @@ impl Watcher<'_> {
                 for w in &mut w_vec {
                     w.run(t);
                 }
+                // 防止没有一个控制器支持日用模式
                 if timer.elapsed() < Duration::from_millis(100) {
                     spin_sleep::sleep(Duration::from_millis(100));
                 }
