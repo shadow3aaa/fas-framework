@@ -1,15 +1,16 @@
 pub fn set_self_sched() {
     let self_pid = &std::process::id().to_string();
-    write_file(self_pid, "/dev/cpuset/background/tasks");
-    let cpu0 = std::fs::read_to_string("/sys/devices/system/cpu/cpufreq/policy0/related_cpus");
+    write_file(self_pid, "/dev/cpuset/foreground/tasks");
+    
+    let policy0 = std::fs::read_to_string("/sys/devices/system/cpu/cpufreq/policy0/related_cpus");
 
-    let cpu0: Vec<usize> = cpu0
+    let policy0: Vec<usize> = policy0
         .unwrap_or_default()
         .split_whitespace()
         .map(|s| s.trim().parse().unwrap_or(0))
         .collect();
 
-    affinity::set_thread_affinity(&cpu0).unwrap_or_default();
+    affinity::set_thread_affinity(&policy0).unwrap_or_default();
 }
 
 pub fn exec_cmd(command: &str, args: &[&str]) -> Result<String, i32> {

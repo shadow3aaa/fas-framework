@@ -1,5 +1,5 @@
 use fas_framework::{misc, ControllerNeed};
-use std::fs;
+use std::{fs, Path::path};
 
 pub struct Cpu {
     freq_table: Vec<u32>,
@@ -7,17 +7,19 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    fn new() -> Cpu {
+    fn new(p) -> Cpu {
 
     }
     pub fn give() -> Vec<Cpu> {
         let policys = fs::read_dir("/sys/devices/system/cpu/cpufreq");
         for policy in policys {
-            if policy.
+            if policy.filename == "policy0"
+                continue;
+            
         }
     }
     fn get_freq() -> u64 {
-
+        
     }
 }
 
