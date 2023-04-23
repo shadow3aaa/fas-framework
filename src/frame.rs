@@ -26,7 +26,7 @@ impl Watcher<'_> {
             Mode::DailyMode(f) => f,
             Mode::GameMode => match self.target_fps_rx.try_recv() {
                 Ok(o) => {
-                    self.target_fps = misc::next_multiple(o, 5);
+                    self.target_fps = misc::next_multiple(o, 10);
                     self.target_fps
                 }
                 Err(_) => self.target_fps,
@@ -257,7 +257,7 @@ impl Watcher<'_> {
                 }
             }
             Mode::GameMode => {
-                if fps < target_fps - 3 {
+                if fps < target_fps - 2 {
                     Jank::Janked
                 } else {
                     Jank::UnJanked
