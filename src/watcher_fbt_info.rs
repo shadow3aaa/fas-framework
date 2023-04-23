@@ -32,11 +32,11 @@ impl FBTWatcher {
 }
 
 impl WatcherNeed for FBTWatcher {
-    fn support(&self) -> bool {
+    fn support(&mut self) -> bool {
         use fas_framework::misc;
         misc::test_path("/sys/kernel/fpsgo/fbt/fbt_info")
     }
-    fn get_ft(&self) -> Receiver<usize> {
+    fn get_ft(&mut self) -> Receiver<usize> {
         use spin_sleep::SpinSleeper;
         use std::{thread, time::Duration};
 
@@ -55,7 +55,7 @@ impl WatcherNeed for FBTWatcher {
         });
         rx
     }
-    fn get_fps(&self) -> fn(std::time::Duration) -> u64 {
+    fn get_fps(&mut self) -> fn(std::time::Duration) -> u64 {
         fn fps_method(avg_time: std::time::Duration) -> u64 {
             use fas_framework::misc::{cut, exec_cmd};
             use spin_sleep::SpinSleeper;

@@ -3,7 +3,7 @@ use crossbeam_channel::{bounded, Receiver};
 use std::time::Duration;
 
 pub struct Watcher<'a> {
-    controller: &'a dyn ControllerNeed,
+    controller: &'a mut dyn ControllerNeed,
     ft_rx: Receiver<usize>,
     fps_fn: fn(Duration) -> u64,
     target_fps_rx: Receiver<u64>,
@@ -147,7 +147,7 @@ impl Watcher<'_> {
     }
 
     // 传入具体实现的监视器列表，匹配第一个支持的
-    pub fn start<'a>(w: &'a [Box<dyn WatcherNeed>], c: &'a [Box<dyn ControllerNeed>]) {
+    pub fn start<'a>(w: &'a mut [Box<dyn WatcherNeed>], c: &'a mut [Box<dyn ControllerNeed>]) {
         use std::{thread, time::Instant};
         for i in w {
             if !i.support() {
@@ -179,7 +179,7 @@ impl Watcher<'_> {
                 }
                 let n = Watcher {
                     ft_rx: ft_rx.clone(),
-                    controller: &**ci,
+                    controller: &mut **ci,
                     fps_fn,
                     target_fps_rx: target_fps_rx.clone(),
                     target_fps: 120,

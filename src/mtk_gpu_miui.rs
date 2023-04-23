@@ -8,7 +8,7 @@ impl Gpu {
     fn write(o: u32) {
         misc::write_file(&o.to_string(), "/proc/gpufreqv2/fix_target_opp_index");
     }
-    fn get_cur(&self) -> u32 {
+    fn get_cur(&mut self) -> u32 {
         use std::fs;
         let cur = fs::read_to_string("/proc/gpufreqv2/gpufreq_status").unwrap();
         let cur = match misc::look_for_head(&cur, 7) {
@@ -34,33 +34,33 @@ impl Gpu {
 }
 
 impl ControllerNeed for Gpu {
-    fn d_support(&self) -> bool {
+    fn d_support(&mut self) -> bool {
         false
     }
     // 检测是否支持该控制器
-    fn support(&self) -> bool {
+    fn support(&mut self) -> bool {
         misc::test_path("/proc/gpufreqv2/fix_target_opp_index")
     }
-    fn g_down(&self) {
+    fn g_down(&mut self) {
         if self.get_cur() < self.max {
             Gpu::write(self.get_cur() + 1);
         } else {
             Gpu::write(self.max);
         }
     }
-    fn g_up(&self) {
+    fn g_up(&mut self) {
         if self.get_cur() >= 1 {
             Gpu::write(self.get_cur() - 1);
         } else {
             Gpu::write(0);
         }
     }
-    fn d_down(&self) {}
-    fn d_up(&self) {}
-    fn g_reset(&self) {
+    fn d_down(&mut self) {}
+    fn d_up(&mut self) {}
+    fn g_reset(&mut self) {
         misc::write_file("0", "/proc/gpufreqv2/fix_target_opp_index");
     }
-    fn d_reset(&self) {
+    fn d_reset(&mut self) {
         misc::write_file("-1", "/proc/gpufreqv2/fix_target_opp_index");
     }
 }

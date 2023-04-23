@@ -104,7 +104,7 @@ pub fn get_top_app() -> String {
             .trim()
             .to_string();
         topapp = fs::read_to_string(format!("/proc/{}/cmdline", pid))
-            .expect("Err : Fail to read cmdline")
+            .unwrap_or(String::new())
             .trim_matches('\0') // cmdline文件尾端有很多NULL🥶
             .to_string();
         return topapp;
