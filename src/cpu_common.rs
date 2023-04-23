@@ -30,9 +30,9 @@ impl Cpu {
             path: String::from(path),
         }
     }
-    pub fn give() -> Vec<Cpu> {
+    pub fn give() -> Vec<Box<dyn ControllerNeed>> {
         // 大部分soc有多个cpu集群，因此返回一个Vec
-        let mut r: Vec<Cpu> = Vec::new();
+        let mut r: Vec<Box<dyn ControllerNeed>> = Vec::new();
 
         // 读取cpu集群目录
         let all = match fs::read_dir("/sys/devices/system/cpu/cpufreq") {
@@ -59,8 +59,9 @@ impl Cpu {
                     continue;
                 }
             };
-
-            r.push(Self::make(cpu.path().to_str().unwrap()));
+            
+            let cpu = Self::make(cpu.path().to_str().unwrap());
+            r.push(Box::new(cpu));
         }
         r
     }

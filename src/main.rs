@@ -13,7 +13,7 @@ fn main() {
         .unwrap()
         .is_empty();
     let mut watcher_list = [FBTWatcher::give()];
-    let mut controller_list = Vec::new();
+    let mut controller_list = cpu_common::Cpu::give();
     if !miui {
         // 如果不是miui
         controller_list.push(mtk_gpu::Gpu::give());
