@@ -176,17 +176,18 @@ pub fn look_for_tail(s: &str, t: usize) -> Option<&str> {
 pub fn next_multiple<T>(input_num: T, multiple: T) -> T
 where
     T: std::ops::Rem<Output = T>
-        + std::ops::AddAssign
-        + std::ops::SubAssign
+        + std::ops::Add<Output = T>
+        + std::ops::Sub<Output = T>
         + std::cmp::PartialOrd
         + Copy,
 {
-    let mut remainder = input_num % multiple;
-    remainder -= input_num;
-    remainder += multiple;
-    if input_num <= remainder {
-        input_num
+    let remainder = input_num % multiple;
+    let low = input_num - remainder;
+    let high = low + multiple;
+    
+    if input_num - low > high - input_num {
+        high
     } else {
-        remainder
+        low
     }
 }

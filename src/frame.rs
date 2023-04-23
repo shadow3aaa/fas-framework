@@ -22,7 +22,7 @@ impl Watcher<'_> {
     }
 
     fn get_target_fps(&mut self) -> u64 {
-        match Watcher::get_current() {
+        let r = match Watcher::get_current() {
             Mode::DailyMode(f) => f,
             Mode::GameMode => match self.target_fps_rx.try_recv() {
                 Ok(o) => {
@@ -32,6 +32,11 @@ impl Watcher<'_> {
                 Err(_) => self.target_fps,
             },
             Mode::None => 0,
+        };
+        if r != 0 {
+            r
+        } else {
+            60
         }
     }
 
@@ -89,6 +94,7 @@ impl Watcher<'_> {
 
     // 单个fas模块运行逻辑
     fn run(&mut self, t: Duration) {
+        let target_fps = self.get_target_fps();
         match Watcher::get_current() {
             Mode::DailyMode(a) => {
                 if self.last_mode != Mode::DailyMode(a) {
@@ -98,7 +104,6 @@ impl Watcher<'_> {
                 if !self.controller.d_support() {
                     return;
                 }
-                let target_fps = self.get_target_fps();
                 let fps_janked = self.get_fps_jank(Duration::from_millis(300));
                 let ft_janked = self.get_ft_jank(target_fps).unwrap_or(false);
                 match fps_janked {
@@ -122,7 +127,6 @@ impl Watcher<'_> {
                     self.last_mode = Mode::GameMode;
                     self.game_reset();
                 }
-                let target_fps = self.get_target_fps();
                 let fps_janked = self.get_fps_jank(t);
                 let ft_janked = match self.get_ft_jank(target_fps / 12) {
                     Ok(o) => o,
@@ -255,7 +259,7 @@ impl Watcher<'_> {
                 }
             }
             Mode::GameMode => {
-                if fps < target_fps - 2 {
+                if fps < target_fps - 3 {
                     Jank::Janked
                 } else {
                     Jank::UnJanked
