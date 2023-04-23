@@ -59,7 +59,7 @@ impl Cpu {
                     continue;
                 }
             };
-            
+
             let cpu = Self::make(cpu.path().to_str().unwrap());
             r.push(Box::new(cpu));
         }
