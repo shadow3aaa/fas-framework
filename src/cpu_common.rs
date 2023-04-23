@@ -134,6 +134,14 @@ impl ControllerNeed for Cpu {
     fn d_down(&mut self) {}
     fn g_reset(&mut self) {
         let freq = *self.freq_table.last().unwrap();
+        let perfmgr = "/sys/module/mtk_fpsgo/parameters/perfmgr_enable";
+        let fpsgo = "/sys/kernel/fpsgo/common/fpsgo_enable";
+        let close = [perfmgr, fpsgo];
+        for i in close {
+            if misc::test_path(i) {
+                misc::write_file("0", i);
+            }
+        }
         self.write_freq(freq);
     }
     fn d_reset(&mut self) {
