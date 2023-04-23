@@ -223,11 +223,9 @@ impl Watcher<'_> {
     /* 消耗frametime消息管道所有数据
     返回指定最近帧内是否有超时 */
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
-        let mut ft_vec: Vec<usize> = Vec::new();
-        let iter = self.ft_rx.try_iter().peekable();
-        ft_vec.extend(iter);
-        ft_vec.reverse();
-        ft_vec.truncate(count.try_into().unwrap());
+        let mut ft_vec: Vec<usize> = self.ft_rx.iter().collect();
+        let len = ft_vec.len();
+        ft_vec.drain(0..len - count as usize);
         let fresh_rate = misc::get_refresh_rate();
         let target_fps = self.get_target_fps();
         let jank_count = ft_vec
