@@ -184,7 +184,7 @@ where
     let remainder = input_num % multiple;
     let low = input_num - remainder;
     let high = low + multiple;
-    
+
     if input_num - low > high - input_num {
         high
     } else {
