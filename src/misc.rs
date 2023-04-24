@@ -48,10 +48,10 @@ pub fn write_file(content: &str, path: &str) {
         io::Write,
         os::unix::fs::PermissionsExt,
     };
-    
+
     // debug
     // println!("path: {}, value: {}", path, content);
-    
+
     match set_permissions(path, PermissionsExt::from_mode(0o644)) {
         Ok(()) => {
             match OpenOptions::new()
@@ -141,7 +141,7 @@ pub fn ask_is_game() -> bool {
     if top_app.is_empty() {
         return false;
     }
-    
+
     // 忽略被误判的
     let ignore = [
         "tv.danmaku.bili",
@@ -158,7 +158,10 @@ pub fn ask_is_game() -> bool {
     }
 
     for line in current_surface_view.lines() {
-        if (line.contains("SurfaceView[") && line.contains("BLAST") || line.contains("SurfaceView -")) && line.contains(top_app) {
+        if (line.contains("SurfaceView[") && line.contains("BLAST")
+            || line.contains("SurfaceView -"))
+            && line.contains(top_app)
+        {
             return true;
         }
     }

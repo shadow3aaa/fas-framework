@@ -1,5 +1,5 @@
 use crossbeam_channel::{bounded, Receiver};
-use fas_framework::{WatcherNeed, misc};
+use fas_framework::{misc, WatcherNeed};
 
 pub struct FBTWatcher;
 
@@ -33,14 +33,13 @@ impl FBTWatcher {
 
 fn read_fps() -> u64 {
     use std::fs;
-    let fpsgo_status = fs::read_to_string("/sys/kernel/fpsgo/fstb/fpsgo_status")
-        .unwrap();
+    let fpsgo_status = fs::read_to_string("/sys/kernel/fpsgo/fstb/fpsgo_status").unwrap();
     let top_app = misc::get_top_app();
     let mut r = 0;
-    
+
     for line in fpsgo_status.lines() {
         let app = misc::cut_whitespace(line, 2);
-        
+
         let fps = misc::cut_whitespace(line, 3);
         let fps = match fps.trim().parse::<u64>() {
             Ok(o) => o,
@@ -48,7 +47,7 @@ fn read_fps() -> u64 {
                 continue;
             }
         };
-        
+
         if top_app.contains(&app) && !app.is_empty() {
             r = std::cmp::max(r, fps);
         }
