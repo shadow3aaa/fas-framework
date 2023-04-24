@@ -1,11 +1,11 @@
 use crossbeam_channel::{bounded, Receiver};
 use fas_framework::{misc, WatcherNeed};
+use std::fs;
 
 pub struct FBTWatcher;
 
 impl FBTWatcher {
     fn read_ft() -> usize {
-        use std::fs;
         let fbt_info = match fs::read_to_string("/sys/kernel/fpsgo/fbt/fbt_info") {
             Ok(o) => o,
             Err(e) => {
@@ -26,33 +26,32 @@ impl FBTWatcher {
             None => 0,
         }
     }
+    fn read_fps() -> u64 {
+        let fpsgo_status = fs::read_to_string("/sys/kernel/fpsgo/fstb/fpsgo_status").unwrap();
+        let top_app = misc::get_top_app();
+        let mut r = 0;
+
+        for line in fpsgo_status.lines() {
+            let app = misc::cut_whitespace(line, 2);
+
+            let fps = misc::cut_whitespace(line, 3);
+            let fps = match fps.trim().parse::<u64>() {
+                Ok(o) => o,
+                Err(_) => {
+                    continue;
+                }
+            };
+
+            if top_app.contains(&app) && !app.is_empty() {
+                r = std::cmp::max(r, fps);
+            }
+        }
+        r
+    }
     pub fn give() -> Box<dyn WatcherNeed> {
+        misc::write_file("1", "/sys/kernel/fpsgo/common/fpsgo_enable");
         Box::new(FBTWatcher {})
     }
-}
-
-fn read_fps() -> u64 {
-    use std::fs;
-    let fpsgo_status = fs::read_to_string("/sys/kernel/fpsgo/fstb/fpsgo_status").unwrap();
-    let top_app = misc::get_top_app();
-    let mut r = 0;
-
-    for line in fpsgo_status.lines() {
-        let app = misc::cut_whitespace(line, 2);
-
-        let fps = misc::cut_whitespace(line, 3);
-        let fps = match fps.trim().parse::<u64>() {
-            Ok(o) => o,
-            Err(_) => {
-                continue;
-            }
-        };
-
-        if top_app.contains(&app) && !app.is_empty() {
-            r = std::cmp::max(r, fps);
-        }
-    }
-    r
 }
 
 impl WatcherNeed for FBTWatcher {
@@ -80,7 +79,7 @@ impl WatcherNeed for FBTWatcher {
     }
     fn get_fps(&mut self) -> fn(std::time::Duration) -> u64 {
         fn fps_method(avg_time: std::time::Duration) -> u64 {
-            let r = misc::timer_exec(avg_time, read_fps).unwrap();
+            let r = misc::timer_exec(avg_time, FBTWatcher::read_fps).unwrap();
             *r.iter().max().unwrap()
         }
         fps_method
