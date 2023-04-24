@@ -26,7 +26,7 @@ impl Watcher<'_> {
             Mode::DailyMode(f) => f,
             Mode::GameMode => match self.target_fps_rx.try_recv() {
                 Ok(o) => {
-                    self.target_fps = misc::next_multiple(o, 10);
+                    self.target_fps = misc::next_multiple(o, 15);
                     self.target_fps
                 }
                 Err(_) => self.target_fps,
@@ -223,11 +223,16 @@ impl Watcher<'_> {
     /* 消耗frametime消息管道所有数据
     返回指定最近帧内是否有超时 */
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
+        // 收集消息
         let mut ft_vec: Vec<usize> = self.ft_rx.iter().collect();
+        // 截断，只保留指定数量最新的消息
         let len = ft_vec.len();
         ft_vec.drain(0..len - count as usize);
+
+        // 用于忽略无用数据
         let fresh_rate = misc::get_refresh_rate();
         let target_fps = self.get_target_fps();
+
         let jank_count = ft_vec
             .iter()
             .filter(|&v| {
@@ -236,16 +241,22 @@ impl Watcher<'_> {
                 o >= (1000 * 1000 * 1000 / target_fps * 11 / 10) as usize
             })
             .count();
+
+        // 3帧及以上超时认为是卡顿
         if ft_vec.len() < count.try_into().unwrap() {
-            return Err(jank_count > 3);
+            Err(jank_count >= 3)
+        } else {
+            Ok(jank_count >= 3)
         }
-        Ok(jank_count > 3)
     }
 
-    /* 等待指定时间，并且返回指定时间通过fps看是否掉帧 */
+    /* 等待指定时间，通过平均fps判断是否掉帧 */
     fn get_fps_jank(&mut self, t: Duration) -> Jank {
+        // 采集
         let fps = (self.fps_fn)(t);
         let target_fps = self.get_target_fps();
+
+        // 分状态返回
         match Watcher::get_current() {
             Mode::DailyMode(f) => {
                 if fps > f / 12 && fps < f - 10 {

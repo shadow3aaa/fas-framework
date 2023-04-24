@@ -124,6 +124,7 @@ pub fn get_top_app() -> String {
 pub fn ask_is_game() -> bool {
     let current_surface_view = exec_cmd("dumpsys", &["SurfaceFlinger", "--list"])
         .expect("Err : Failed to execute dumpsys SurfaceView");
+    let top_app: &str = &get_top_app();
     // 忽略被误判的
     let ignore = [
         "tv.danmaku.bili",
@@ -135,13 +136,13 @@ pub fn ask_is_game() -> bool {
         "com.tencent.mobileqq",
         "com.miui.gallery",
     ];
-    if ignore.contains(&&get_top_app()[..]) {
+    if ignore.contains(&top_app) {
         return false;
     }
     for line in current_surface_view.lines() {
         if line.contains("SurfaceView[") && line.contains("BLAST") || line.contains("SurfaceView -")
         {
-            return line.contains(&get_top_app());
+            return line.contains(&top_app) && !top_app.is_empty();
         }
     }
     false
