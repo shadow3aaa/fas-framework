@@ -26,6 +26,7 @@ impl Watcher<'_> {
             Mode::DailyMode(f) => f,
             Mode::GameMode => match self.target_fps_rx.try_recv() {
                 Ok(o) => {
+                    // println!("fps : {}", o);
                     self.target_fps = misc::next_multiple(o, 15);
                     self.target_fps
                 }
@@ -95,6 +96,7 @@ impl Watcher<'_> {
     // 单个fas模块运行逻辑
     fn run(&mut self, t: Duration) {
         let target_fps = self.get_target_fps();
+        // println!("run : get target_fps : {}", target_fps);
         match Watcher::get_current() {
             Mode::DailyMode(a) => {
                 if self.last_mode != Mode::DailyMode(a) {
@@ -224,10 +226,10 @@ impl Watcher<'_> {
     返回指定最近帧内是否有超时 */
     fn get_ft_jank(&mut self, count: u64) -> Result<bool, bool> {
         // 收集消息
-        let mut ft_vec: Vec<usize> = self.ft_rx.iter().collect();
+        let mut ft_vec: Vec<usize> = self.ft_rx.try_iter().collect();
         // 截断，只保留指定数量最新的消息
-        let len = ft_vec.len();
-        ft_vec.drain(0..len - count as usize);
+        ft_vec.reverse();
+        ft_vec.truncate(count.try_into().unwrap());
 
         // 用于忽略无用数据
         let fresh_rate = misc::get_refresh_rate();

@@ -1,5 +1,5 @@
 use crossbeam_channel::{bounded, Receiver};
-use fas_framework::WatcherNeed;
+use fas_framework::{WatcherNeed, misc};
 
 pub struct FBTWatcher;
 
@@ -31,9 +31,33 @@ impl FBTWatcher {
     }
 }
 
+fn read_fps() -> u64 {
+    use std::fs;
+    let fpsgo_status = fs::read_to_string("/sys/kernel/fpsgo/fstb/fpsgo_status")
+        .unwrap();
+    let top_app = misc::get_top_app();
+    let mut r = 0;
+    
+    for line in fpsgo_status.lines() {
+        let app = misc::cut_whitespace(line, 2);
+        
+        let fps = misc::cut_whitespace(line, 3);
+        let fps = match fps.trim().parse::<u64>() {
+            Ok(o) => o,
+            Err(_) => {
+                continue;
+            }
+        };
+        
+        if top_app.contains(&app) && !app.is_empty() {
+            r = std::cmp::max(r, fps);
+        }
+    }
+    r
+}
+
 impl WatcherNeed for FBTWatcher {
     fn support(&mut self) -> bool {
-        use fas_framework::misc;
         misc::test_path("/sys/kernel/fpsgo/fbt/fbt_info")
     }
     fn get_ft(&mut self) -> Receiver<usize> {
@@ -57,24 +81,8 @@ impl WatcherNeed for FBTWatcher {
     }
     fn get_fps(&mut self) -> fn(std::time::Duration) -> u64 {
         fn fps_method(avg_time: std::time::Duration) -> u64 {
-            use fas_framework::misc::{cut, exec_cmd};
-            use spin_sleep::SpinSleeper;
-            use std::time::Instant;
-            let sleeper = SpinSleeper::default();
-
-            let data_a = exec_cmd("service", &["call", "SurfaceFlinger", "1013"])
-                .expect("Failed to exec service command");
-            let now = Instant::now();
-            let data_a = cut(&cut(&data_a, "(", 1), "\'", 0);
-            let data_a = u64::from_str_radix(&data_a, 16).unwrap();
-
-            sleeper.sleep(avg_time);
-
-            let data_b = exec_cmd("service", &["call", "SurfaceFlinger", "1013"])
-                .expect("Failed to exec service command");
-            let data_b = cut(&cut(&data_b, "(", 1), "\'", 0);
-            let data_b = u64::from_str_radix(&data_b, 16).unwrap();
-            (data_b - data_a) * 1000 / (now.elapsed().as_millis() as u64)
+            let r = misc::timer_exec(avg_time, read_fps).unwrap();
+            *r.iter().max().unwrap()
         }
         fps_method
     }

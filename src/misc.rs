@@ -34,12 +34,24 @@ pub fn cut(str: &str, sym: &str, f: usize) -> String {
     }
 }
 
+pub fn cut_whitespace(str: &str, f: usize) -> String {
+    let fs: Vec<&str> = str.split_whitespace().collect();
+    match fs.get(f) {
+        Some(s) => s.trim().to_string(),
+        None => String::new(),
+    }
+}
+
 pub fn write_file(content: &str, path: &str) {
     use std::{
         fs::{set_permissions, OpenOptions},
         io::Write,
         os::unix::fs::PermissionsExt,
     };
+    
+    // debug
+    // println!("path: {}, value: {}", path, content);
+    
     match set_permissions(path, PermissionsExt::from_mode(0o644)) {
         Ok(()) => {
             match OpenOptions::new()
@@ -125,6 +137,11 @@ pub fn ask_is_game() -> bool {
     let current_surface_view = exec_cmd("dumpsys", &["SurfaceFlinger", "--list"])
         .expect("Err : Failed to execute dumpsys SurfaceView");
     let top_app: &str = &get_top_app();
+
+    if top_app.is_empty() {
+        return false;
+    }
+    
     // 忽略被误判的
     let ignore = [
         "tv.danmaku.bili",
@@ -139,10 +156,10 @@ pub fn ask_is_game() -> bool {
     if ignore.contains(&top_app) {
         return false;
     }
+
     for line in current_surface_view.lines() {
-        if line.contains("SurfaceView[") && line.contains("BLAST") || line.contains("SurfaceView -")
-        {
-            return line.contains(&top_app) && !top_app.is_empty();
+        if (line.contains("SurfaceView[") && line.contains("BLAST") || line.contains("SurfaceView -")) && line.contains(top_app) {
+            return true;
         }
     }
     false

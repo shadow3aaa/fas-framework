@@ -59,7 +59,6 @@ impl Cpu {
                     continue;
                 }
             };
-
             let cpu = Self::make(cpu.path().to_str().unwrap());
             r.push(Box::new(cpu));
         }
@@ -116,6 +115,7 @@ impl ControllerNeed for Cpu {
     }
     // 检测是否支持该控制器
     fn support(&mut self) -> bool {
+        println!("{}", self.path);
         misc::test_path(&self.path)
     }
     // 游戏内增加性能和功耗的方法
