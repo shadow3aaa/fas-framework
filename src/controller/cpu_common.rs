@@ -115,7 +115,6 @@ impl ControllerNeed for Cpu {
     }
     // 检测是否支持该控制器
     fn support(&mut self) -> bool {
-        println!("{}", self.path);
         misc::test_path(&self.path)
     }
     // 游戏内增加性能和功耗的方法
@@ -141,7 +140,7 @@ impl ControllerNeed for Cpu {
                 misc::write_file("0", i);
             }
         }
-        
+
         let freq = *self.freq_table.last().unwrap();
         self.write_freq(freq);
     }
