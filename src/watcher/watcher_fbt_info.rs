@@ -6,6 +6,7 @@ pub struct FBTWatcher;
 
 impl FBTWatcher {
     fn read_ft() -> usize {
+        Self::enable();
         let fbt_info = match fs::read_to_string("/sys/kernel/fpsgo/fbt/fbt_info") {
             Ok(o) => o,
             Err(e) => {
@@ -27,6 +28,7 @@ impl FBTWatcher {
         }
     }
     fn read_fps() -> u64 {
+        Self::enable();
         let fpsgo_status = fs::read_to_string("/sys/kernel/fpsgo/fstb/fpsgo_status").unwrap();
         let top_app = misc::get_top_app();
         let mut r = 0;
@@ -48,8 +50,10 @@ impl FBTWatcher {
         }
         r
     }
+    fn enable() {
+        misc::write_file("1", "/sys/kernel/fpsgo/common/fpsgo_enable")
+    }
     pub fn give() -> Box<dyn WatcherNeed> {
-        misc::write_file("1", "/sys/kernel/fpsgo/common/fpsgo_enable");
         Box::new(FBTWatcher {})
     }
 }

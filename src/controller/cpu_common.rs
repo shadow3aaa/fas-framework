@@ -133,15 +133,16 @@ impl ControllerNeed for Cpu {
     // 日用降低性能和功耗的方法(同上)
     fn d_down(&mut self) {}
     fn g_reset(&mut self) {
-        let freq = *self.freq_table.last().unwrap();
+        // 此处关闭系统打架的调度
         let perfmgr = "/sys/module/mtk_fpsgo/parameters/perfmgr_enable";
-        let fpsgo = "/sys/kernel/fpsgo/common/fpsgo_enable";
-        let close = [perfmgr, fpsgo];
+        let close = [perfmgr];
         for i in close {
             if misc::test_path(i) {
                 misc::write_file("0", i);
             }
         }
+        
+        let freq = *self.freq_table.last().unwrap();
         self.write_freq(freq);
     }
     fn d_reset(&mut self) {
