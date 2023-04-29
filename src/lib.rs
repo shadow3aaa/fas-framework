@@ -4,17 +4,17 @@ pub mod misc;
 use crossbeam_channel::Receiver;
 use std::time::Duration;
 
+pub enum Jank {
+    Janked,
+    UnJanked,
+    Static,
+}
+
 #[derive(PartialEq)]
 pub enum Mode {
     DailyMode(u64),
     GameMode,
     None,
-}
-
-pub enum Jank {
-    Janked,
-    UnJanked,
-    Static,
 }
 
 #[derive(PartialEq)]

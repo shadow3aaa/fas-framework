@@ -26,20 +26,27 @@ pub fn exec_cmd(command: &str, args: &[&str]) -> Result<String, i32> {
     }
 }
 
+#[test]
+fn exec_cmd_test() {
+    assert_eq!(exec_cmd("echo", &["Apple"]).unwrap(), String::from("Apple\n"))
+}
+
 pub fn cut(str: &str, sym: &str, f: usize) -> String {
-    let fs: Vec<&str> = str.split(sym).collect();
-    match fs.get(f) {
-        Some(s) => s.trim().to_string(),
-        None => String::new(),
-    }
+    let mut fs = str.split(sym);
+    let s = fs.nth(f).unwrap_or("").trim();
+    s.to_string()
 }
 
 pub fn cut_whitespace(str: &str, f: usize) -> String {
-    let fs: Vec<&str> = str.split_whitespace().collect();
-    match fs.get(f) {
-        Some(s) => s.trim().to_string(),
-        None => String::new(),
-    }
+    let mut fs = str.split_whitespace();
+    let s = fs.nth(f).unwrap_or("").trim();
+    s.to_string()
+}
+
+#[test]
+fn cut_test() {
+    assert_eq!(cut("I*have*a*banana", "*", 3), "banana");
+    assert_eq!(cut_whitespace("I have an   apple", 3), "apple")
 }
 
 pub fn write_file(content: &str, path: &str) {
@@ -75,8 +82,7 @@ pub fn test_path(x: &str) -> bool {
     std::path::Path::new(x).exists()
 }
 
-use std::time::Duration;
-pub fn timer_exec<F, R>(t: Duration, f: F) -> Option<Vec<R>>
+pub fn timer_exec<F, R>(t: std::time::Duration, f: F) -> Option<Vec<R>>
 where
     F: Fn() -> R + Send + 'static,
     R: Send + 'static,
@@ -193,6 +199,14 @@ pub fn look_for_tail(s: &str, t: usize) -> Option<&str> {
     s.lines().rev().nth(t)
 }
 
+#[test]
+fn look_for_test() {
+    assert_eq!(look_for_head("sjwnsbbde", 1), None);
+    assert_eq!(look_for_head("sjwns\nbbde", 1).unwrap(), "bbde");
+    assert_eq!(look_for_tail("sjrjrbbde", 1), None);
+    assert_eq!(look_for_tail("sjwns\nbbde", 1).unwrap(), "sjwns")
+}
+
 #[inline]
 pub fn next_multiple<T>(input_num: T, multiple: T) -> T
 where
@@ -211,4 +225,10 @@ where
     } else {
         low
     }
+}
+
+#[test]
+fn next_multiple_test() {
+    assert_eq!(next_multiple(8, 3), 9);
+    assert_eq!(next_multiple(12, 3), 12)
 }

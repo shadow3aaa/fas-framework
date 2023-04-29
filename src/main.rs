@@ -1,6 +1,4 @@
-use fas_framework::{frame::Watcher, misc};
-
-/* 在这里导入模块 */
+use self::{frame::Watcher, misc};
 mod watcher;
 use crate::watcher::*;
 mod controller;
