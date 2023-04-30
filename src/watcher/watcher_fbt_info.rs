@@ -51,7 +51,7 @@ impl FBTWatcher {
         r
     }
     fn enable() {
-        misc::write_file("1", "/sys/kernel/fpsgo/common/fpsgo_enable")
+        misc::lock_value("1", "/sys/kernel/fpsgo/common/fpsgo_enable")
     }
     pub fn give() -> Box<dyn WatcherNeed> {
         Box::new(FBTWatcher {})

@@ -23,5 +23,5 @@ fn main() {
         controller_list.push(mtk_gpu_miui::Gpu::give());
     }
 
-    core::process(&watcher_list, &controller_list);
+    core::process(&mut watcher_list, &mut controller_list);
 }

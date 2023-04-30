@@ -72,6 +72,7 @@ version = "0.0.3"
 dependencies = [
  "affinity",
  "crossbeam-channel",
+ "libc",
  "spin_sleep",
 ]
 

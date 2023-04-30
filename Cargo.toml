@@ -15,6 +15,7 @@ opt-level = 3
 strip = true
 
 [dependencies]
+libc = "0.2.142"
 affinity = "0.1.2"
 spin_sleep = "1.1.1"
 crossbeam-channel = "0.5.8"

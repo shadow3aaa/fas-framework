@@ -232,3 +232,54 @@ fn next_multiple_test() {
     assert_eq!(next_multiple(8, 3), 9);
     assert_eq!(next_multiple(12, 3), 12)
 }
+
+// 把一个文件挂载到另一个文件
+use std::ffi::CString;
+use std::os::raw::c_char;
+use libc::{mount, umount, umount2, MS_BIND, MS_REC, EINVAL};
+pub fn mount_bind(src_path: &str, dest_path: &str) -> Result<(), String> {
+    let src_path = CString::new(src_path).expect("CString::new failed");
+    let dest_path = CString::new(dest_path).expect("CString::new failed");
+
+    // 检查目录是否已经被挂载，如果是的，先卸载
+    let result = unsafe { umount2(dest_path.as_ptr(), libc::MNT_DETACH) };
+    if result != 0 && result != -1 * EINVAL {
+        return Err(String::from("Failed to unmount old filesystem."));
+    }
+
+    // 挂载文件系统
+    let result = unsafe {
+        mount(
+            src_path.as_ptr() as *const c_char,
+            dest_path.as_ptr() as *const c_char,
+            std::ptr::null(),
+            MS_BIND | MS_REC,
+            std::ptr::null(),
+        )
+    };
+
+    if result != 0 {
+        if result == -1 * EINVAL {
+            return Err(String::from("Invalid arguments provided."));
+        } else {
+            return Err(String::from("Failed to mount filesystem."));
+        }
+    }
+
+    Ok(())
+}
+
+/// 执行解除挂载操作
+pub fn unmount(file_system: &str) {
+    let path = CString::new(file_system).unwrap();
+    let result = unsafe { umount(path.as_ptr()) };
+}
+
+// 锁定文件
+pub fn lock_value(value: &str, path: &str) {
+    unmount(path);
+    write_file(value, path);
+    let mount_path = format!("/cache/mount_mask_{}", value);
+    write_file(value, &mount_path);
+    mount_bind(&mount_path, path);
+}
