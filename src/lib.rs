@@ -1,5 +1,5 @@
-pub mod misc;
 pub mod core;
+pub mod misc;
 
 use crossbeam_channel::Receiver;
 use std::time::Duration;

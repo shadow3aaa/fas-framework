@@ -1,12 +1,11 @@
-use super::{Status, Jank};
-use crate::{WatcherNeed,
-    ControllerNeed,
-    misc
-};
+use super::{Jank, Status};
+use crate::{misc, ControllerNeed, WatcherNeed};
 use std::process;
 
 // 获取第一个支持的监视器
-pub fn get_watcher<'a>(watcher_list : &'a mut [Box<dyn WatcherNeed>]) -> &'a mut Box<dyn WatcherNeed> {
+pub fn get_watcher<'a>(
+    watcher_list: &'a mut [Box<dyn WatcherNeed>],
+) -> &'a mut Box<dyn WatcherNeed> {
     for w in watcher_list {
         if w.support() {
             return w;
@@ -16,7 +15,9 @@ pub fn get_watcher<'a>(watcher_list : &'a mut [Box<dyn WatcherNeed>]) -> &'a mut
     process::exit(-1);
 }
 
-pub fn get_controller_list<'a>(controller_list : &'a mut [Box<dyn ControllerNeed>]) -> Vec<&'a mut Box<dyn ControllerNeed>> {
+pub fn get_controller_list<'a>(
+    controller_list: &'a mut [Box<dyn ControllerNeed>],
+) -> Vec<&'a mut Box<dyn ControllerNeed>> {
     let mut r = Vec::new();
     for c in controller_list {
         if c.support() {
@@ -30,15 +31,13 @@ pub fn get_controller_list<'a>(controller_list : &'a mut [Box<dyn ControllerNeed
     r
 }
 
-pub fn check(watcher: &mut dyn WatcherNeed) -> Jank {
-    
-}
+pub fn check(watcher: &mut dyn WatcherNeed) -> Jank {}
 
 impl Status {
     pub fn new() -> Status {
         Status {
-            fresh_rate : 0,
-            game : false,
+            fresh_rate: 0,
+            game: false,
         }
     }
     pub fn update(&mut self) {

@@ -1,5 +1,5 @@
-use fas_framework::{core, misc};
 use crate::watcher::*;
+use fas_framework::{core, misc};
 mod controller;
 use crate::controller::*;
 

@@ -28,7 +28,10 @@ pub fn exec_cmd(command: &str, args: &[&str]) -> Result<String, i32> {
 
 #[test]
 fn exec_cmd_test() {
-    assert_eq!(exec_cmd("echo", &["Apple"]).unwrap(), String::from("Apple\n"))
+    assert_eq!(
+        exec_cmd("echo", &["Apple"]).unwrap(),
+        String::from("Apple\n")
+    )
 }
 
 pub fn cut(str: &str, sym: &str, f: usize) -> String {
@@ -234,9 +237,9 @@ fn next_multiple_test() {
 }
 
 // 把一个文件挂载到另一个文件
+use libc::{mount, umount, umount2, EINVAL, MS_BIND, MS_REC};
 use std::ffi::CString;
 use std::os::raw::c_char;
-use libc::{mount, umount, umount2, MS_BIND, MS_REC, EINVAL};
 pub fn mount_bind(src_path: &str, dest_path: &str) -> Result<(), String> {
     let src_path = CString::new(src_path).expect("CString::new failed");
     let dest_path = CString::new(dest_path).expect("CString::new failed");

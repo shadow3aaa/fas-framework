@@ -1,18 +1,18 @@
 use crate::ControllerNeed;
 
 pub struct Unit<'a> {
-    controller : &'a mut dyn ControllerNeed,
-    need_review : bool,
+    controller: &'a mut dyn ControllerNeed,
+    need_review: bool,
 }
 
 impl<'a> Unit<'a> {
-    pub fn new(controller : &'a mut dyn ControllerNeed) -> Box<Self> {
+    pub fn new(controller: &'a mut dyn ControllerNeed) -> Box<Self> {
         Box::new(Self {
             controller,
-            need_review : false,
+            need_review: false,
         })
     }
-    pub fn reset(&mut self, game : bool) {
+    pub fn reset(&mut self, game: bool) {
         self.need_review = false;
         if game {
             self.controller.g_reset();
@@ -20,5 +20,4 @@ impl<'a> Unit<'a> {
             self.controller.d_reset();
         }
     }
-    
 }
