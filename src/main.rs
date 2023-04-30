@@ -1,4 +1,4 @@
-use self::{frame::Watcher, misc};
+use fas_framework::{core, misc};
 mod watcher;
 use crate::watcher::*;
 mod controller;

@@ -1,4 +1,4 @@
-use crate::{misc, ControllerNeed, Jank, Mode, UpOrDown, WatcherNeed};
+use crate::{misc, ControllerNeed, Mode, UpOrDown, Jank, WatcherNeed};
 use crossbeam_channel::{bounded, Receiver};
 use std::time::Duration;
 

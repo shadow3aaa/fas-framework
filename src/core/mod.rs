@@ -1,6 +1,6 @@
 mod unit;
 mod utils;
-use self::{fas_unit::Unit, utils::*};
+use self::{unit::Unit, utils::*};
 
 pub struct Status {
     fresh_rate : i32,
@@ -13,4 +13,6 @@ pub enum Jank {
     Static,
 }
 
-pub fn run
+pub fn run() {
+    let 
+}
