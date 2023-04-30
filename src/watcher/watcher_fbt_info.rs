@@ -81,11 +81,14 @@ impl WatcherNeed for FBTWatcher {
         });
         rx
     }
-    fn get_fps(&mut self) -> fn(std::time::Duration) -> u64 {
-        fn fps_method(avg_time: std::time::Duration) -> u64 {
-            let r = misc::timer_exec(avg_time, FBTWatcher::read_fps).unwrap();
-            *r.iter().max().unwrap()
-        }
-        fps_method
+    fn get_fps(&mut self, avg_time: std::time::Duration) -> u64 {
+        let r = match misc::timer_exec(avg_time, FBTWatcher::read_fps) {
+           Some(o) => o,
+           None => {
+               return 0
+           }
+        };
+         
+        r.iter().sum() / r.len() as u64
     }
 }

@@ -31,7 +31,7 @@ pub trait WatcherNeed {
     // 返回一个用于接收frametime的Receiver
     fn get_ft(&mut self) -> Receiver<usize>;
     // 给出时间，得出从现在开始到指定时间内的平均fps
-    fn get_fps(&mut self) -> fn(Duration) -> u64;
+    fn get_fps(&mut self, _: Duration) -> u64;
 }
 
 /* 控制器类型必须实现该trait */

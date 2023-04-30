@@ -1,5 +1,8 @@
 use super::{Status, Jank};
-use crate::{WatcherNeed, ControllerNeed};
+use crate::{WatcherNeed,
+    ControllerNeed,
+    misc
+};
 use std::process;
 
 // 获取第一个支持的监视器
@@ -27,7 +30,7 @@ pub fn get_controller_list<'a>(controller_list : &'a mut [Box<dyn ControllerNeed
     r
 }
 
-pub fn check() -> Jank {
+pub fn check(watcher: &mut dyn WatcherNeed) -> Jank {
     
 }
 
@@ -35,10 +38,11 @@ impl Status {
     pub fn new() -> Status {
         Status {
             fresh_rate : 0,
-            top_app : String::new(),
+            game : false,
         }
     }
     pub fn update(&mut self) {
-    
+        self.fresh_rate = misc::get_refresh_rate();
+        self.game = misc::ask_is_game();
     }
 }

@@ -1,5 +1,4 @@
 use fas_framework::{core, misc};
-mod watcher;
 use crate::watcher::*;
 mod controller;
 use crate::controller::*;
@@ -24,5 +23,5 @@ fn main() {
         controller_list.push(mtk_gpu_miui::Gpu::give());
     }
 
-    Watcher::start(&mut watcher_list, &mut controller_list);
+    core::process(&watcher_list, &controller_list);
 }
