@@ -1,5 +1,5 @@
 use super::{Status, Jank};
-use crate::{misc, WatcherNeed, ControllerNeed};
+use crate::{WatcherNeed, ControllerNeed};
 use std::process;
 
 // 获取第一个支持的监视器

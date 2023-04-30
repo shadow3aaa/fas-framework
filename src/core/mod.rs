@@ -1,6 +1,6 @@
 mod unit;
 mod utils;
-use self::{unit::Unit, utils::*};
+use crate::{WatcherNeed, ControllerNeed};
 
 pub struct Status {
     fresh_rate : i32,
@@ -13,6 +13,12 @@ pub enum Jank {
     Static,
 }
 
-pub fn run() {
-    let 
+pub fn run<'a>(watcher_list: &'a mut [Box<dyn WatcherNeed>], controller_list: &'a mut [Box<dyn ControllerNeed>]) {
+    // 匹配设备支持的方法
+    let watcher = utils::get_watcher(watcher_list);
+    let controller_list = utils::get_controller_list(controller_list);
+
+    loop {
+        
+    }
 }
