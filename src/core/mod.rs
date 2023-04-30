@@ -1,6 +1,7 @@
 mod unit;
 mod utils;
 use crate::{ControllerNeed, WatcherNeed};
+use unit::Unit;
 
 pub struct Status {
     pub fresh_rate: u64,
@@ -26,7 +27,19 @@ pub fn process<'a>(
     // 分开通用和游戏
     let (ctrl_all_sup, ctrl_only_game) = filter_controllers(&controller_list);
 
-    loop {}
+    // 封装为单元
+    let mut ctrl_all = Unit::trans(controller_list);
+    let mut ctrl_all_sup = Unit::trans(ctrl_all_sup);
+    let mut ctrl_only_game = Unit::trans(ctrl_only_game);
+
+    // 保存了当前需要状态信息，可以更新的结构体
+    let mut status = Status::new();
+
+    loop {
+        if status.update() {
+
+        }
+    }
 }
 
 // 分别获取支持日用模式的和不支持的

@@ -31,7 +31,9 @@ pub fn get_controller_list<'a>(
     r
 }
 
-pub fn check(watcher: &mut dyn WatcherNeed) -> Jank {}
+/*pub fn check(watcher: &mut dyn WatcherNeed) -> Jank {
+
+}*/
 
 impl Status {
     pub fn new() -> Status {
@@ -40,8 +42,14 @@ impl Status {
             game: false,
         }
     }
-    pub fn update(&mut self) {
+    // 返回true代表状态变化，需要reset
+    pub fn update(&mut self) -> bool {
         self.fresh_rate = misc::get_refresh_rate();
-        self.game = misc::ask_is_game();
+        let game = misc::ask_is_game();
+        if self.game != game {
+            self.game = game;
+            return true;
+        }
+        false
     }
 }

@@ -1,16 +1,23 @@
 use crate::ControllerNeed;
 
 pub struct Unit<'a> {
-    controller: &'a mut dyn ControllerNeed,
+    pub controller: &'a mut dyn ControllerNeed,
     need_review: bool,
 }
 
 impl<'a> Unit<'a> {
-    pub fn new(controller: &'a mut dyn ControllerNeed) -> Box<Self> {
-        Box::new(Self {
+    pub fn new(controller: &'a mut dyn ControllerNeed) -> Self {
+        Self {
             controller,
             need_review: false,
-        })
+        }
+    }
+    pub fn trans(list: Vec<&mut Box<dyn ControllerNeed>>) -> Vec<Unit> {
+        let mut r: Vec<Unit> = Vec::new();
+        for c in list {
+            r.push(Unit::new(&mut **c));
+        }
+        r
     }
     pub fn reset(&mut self, game: bool) {
         self.need_review = false;
@@ -18,6 +25,20 @@ impl<'a> Unit<'a> {
             self.controller.g_reset();
         } else {
             self.controller.d_reset();
+        }
+    }
+    pub fn up(&mut self, game: bool) {
+        if game {
+            self.controller.g_up();
+        } else {
+            self.controller.d_up();
+        }
+    }
+    pub fn down(&mut self, game: bool) {
+        if game {
+            self.controller.g_down();
+        } else {
+            self.controller.d_down();
         }
     }
 }
