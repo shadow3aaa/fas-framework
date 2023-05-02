@@ -25,8 +25,9 @@ pub fn process<'a>(
     let controller_list = utils::get_controller_list(&mut controller_list);
 
     // 分开通用和游戏
-    let mut controller_list: Vec<Box<dyn ControllerNeed>> = controller_list.iter_mut().cloned().collect();
-let (ctrl_all_sup, ctrl_only_game) = filter_controllers(&mut controller_list);
+    let mut controller_list: Vec<Box<dyn ControllerNeed>> =
+        controller_list.iter_mut().cloned().collect();
+    let (ctrl_all_sup, ctrl_only_game) = filter_controllers(&mut controller_list);
 
     // 封装为单元
     let mut ctrl_all = Unit::trans(&mut controller_list);
@@ -37,9 +38,7 @@ let (ctrl_all_sup, ctrl_only_game) = filter_controllers(&mut controller_list);
     let mut status = Status::new();
 
     loop {
-        if status.update() {
-
-        }
+        if status.update() {}
     }
 }
 
