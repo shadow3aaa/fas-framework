@@ -1,7 +1,4 @@
-use crate::watcher::*;
-use fas_framework::{core, misc};
-mod controller;
-use crate::controller::*;
+use fas_framework::{controller::*, core, misc, watcher::*};
 
 fn main() {
     misc::set_self_sched();

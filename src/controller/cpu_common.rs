@@ -1,4 +1,4 @@
-use fas_framework::{misc, ControllerNeed};
+use crate::{misc, Controller};
 use std::fs;
 
 pub struct Cpu {
@@ -6,9 +6,9 @@ pub struct Cpu {
     path: String,
 }
 
-enum NextOrLast {
+enum NextOrPrev {
     Next,
-    Last,
+    Prev,
 }
 
 impl Cpu {
@@ -30,9 +30,9 @@ impl Cpu {
             path: String::from(path),
         }
     }
-    pub fn give() -> Vec<Box<dyn ControllerNeed>> {
+    pub fn give() -> Vec<Box<dyn Controller>> {
         // 大部分soc有多个cpu集群，因此返回一个Vec
-        let mut r: Vec<Box<dyn ControllerNeed>> = Vec::new();
+        let mut r: Vec<Box<dyn Controller>> = Vec::new();
 
         // 读取cpu集群目录
         let all = match fs::read_dir("/sys/devices/system/cpu/cpufreq") {
@@ -78,7 +78,7 @@ impl Cpu {
             i
         }
     }
-    fn get_freq(&mut self, option: NextOrLast) -> i32 {
+    fn get_freq(&mut self, option: NextOrPrev) -> i32 {
         // 读取现在的最大频率
         let path = format!("{}/scaling_max_freq", self.path);
         let max_freq = fs::read_to_string(path)
@@ -91,11 +91,11 @@ impl Cpu {
 
         // 根据需要返回要写入的频率
         match option {
-            NextOrLast::Next => *self
+            NextOrPrev::Next => *self
                 .freq_table
                 .get(cur + 1)
                 .unwrap_or(self.freq_table.last().unwrap()),
-            NextOrLast::Last => *self
+            NextOrPrev::Prev => *self
                 .freq_table
                 .get(cur - 1)
                 .unwrap_or(self.freq_table.first().unwrap()),
@@ -108,7 +108,7 @@ impl Cpu {
     }
 }
 
-impl ControllerNeed for Cpu {
+impl Controller for Cpu {
     // 是否支持日用模式
     fn d_support(&mut self) -> bool {
         false
@@ -119,18 +119,14 @@ impl ControllerNeed for Cpu {
     }
     // 游戏内增加性能和功耗的方法
     fn g_up(&mut self) {
-        let freq = self.get_freq(NextOrLast::Next);
+        let freq = self.get_freq(NextOrPrev::Next);
         self.write_freq(freq);
     }
     // 游戏外降低性能和功耗的方法
     fn g_down(&mut self) {
-        let freq = self.get_freq(NextOrLast::Last);
+        let freq = self.get_freq(NextOrPrev::Prev);
         self.write_freq(freq);
     }
-    // 日用增加性能和功耗的方法(如果没有就写个空函数)
-    fn d_up(&mut self) {}
-    // 日用降低性能和功耗的方法(同上)
-    fn d_down(&mut self) {}
     fn g_reset(&mut self) {
         // 此处关闭系统打架的调度
         let perfmgr = "/sys/module/mtk_fpsgo/parameters/perfmgr_enable";
@@ -141,10 +137,11 @@ impl ControllerNeed for Cpu {
             }
         }
 
-        let freq = *self.freq_table.last().unwrap();
-        self.write_freq(freq);
+        let _freq = *self.freq_table.last().unwrap();
+        self.d_reset()
     }
     fn d_reset(&mut self) {
-        self.g_reset();
+        let freq = *self.freq_table.last().unwrap();
+        self.write_freq(freq)
     }
 }

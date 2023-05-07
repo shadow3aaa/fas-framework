@@ -1,5 +1,5 @@
+use crate::{misc, Watcher};
 use crossbeam_channel::{bounded, Receiver};
-use fas_framework::{misc, WatcherNeed};
 use std::fs;
 
 pub struct FBTWatcher;
@@ -53,12 +53,12 @@ impl FBTWatcher {
     fn enable() {
         misc::lock_value("1", "/sys/kernel/fpsgo/common/fpsgo_enable")
     }
-    pub fn give() -> Box<dyn WatcherNeed> {
+    pub fn give() -> Box<dyn Watcher> {
         Box::new(FBTWatcher {})
     }
 }
 
-impl WatcherNeed for FBTWatcher {
+impl Watcher for FBTWatcher {
     fn support(&mut self) -> bool {
         misc::test_path("/sys/kernel/fpsgo/fbt/fbt_info")
     }
@@ -83,12 +83,10 @@ impl WatcherNeed for FBTWatcher {
     }
     fn get_fps(&mut self, avg_time: std::time::Duration) -> u64 {
         let r = match misc::timer_exec(avg_time, FBTWatcher::read_fps) {
-           Some(o) => o,
-           None => {
-               return 0
-           }
+            Some(o) => o,
+            None => return 0,
         };
-         
-        r.iter().sum() / r.len() as u64
+
+        r.iter().sum::<u64>() / r.len() as u64
     }
 }
