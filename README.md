@@ -1,3 +1,5 @@
+因为已经写成构思了所以不会更新，推荐使用https://github.com/shadow3aaa/fas-rs
+
 *介绍
 这是一个frame aware scheduling调度的框架
 
